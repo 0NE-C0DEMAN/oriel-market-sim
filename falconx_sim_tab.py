@@ -64,6 +64,12 @@ def render_falconx_sim_tab():
         else:
             badges += f"<span style='font-size:0.64rem;font-weight:600;padding:3px 8px;border-radius:4px;background:rgba(30,45,66,0.5);color:{TEXT_MUTED};margin-right:6px;'>{part}</span>"
     st.markdown(f"<div style='margin:6px 0 12px;'>{badges}</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:-2px 0 12px;'>"
+        "Normalization basis: all venues are mapped onto a common <b>implied YoY CPI</b> basis before Oriel weighting. Kalshi monthly thresholds use compounded annualization ((1+m)^12 - 1); Polymarket and ForecastEx pass through unless contract scale implies monthly normalization."
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
     if front_df.empty:
         st.warning("No front-end venue data available. Check venue connectivity or fallback sample data.")
@@ -97,7 +103,7 @@ def render_falconx_sim_tab():
     with col_l:
         st.markdown("<div class='shdr'>Venue Dislocations vs Oriel Reference</div>", unsafe_allow_html=True)
         fig = go.Figure()
-        for venue, color in [("Kalshi", GOLD), ("Polymarket", SERIES2)]:
+        for venue, color in [("Kalshi", GOLD), ("Polymarket", SERIES2), ("ForecastEx", POSITIVE)]:
             sub = dislocations[dislocations["venue"] == venue]
             if sub.empty:
                 continue
@@ -145,7 +151,8 @@ def render_falconx_sim_tab():
     # ── Venue snapshot table (scrollable, 6-row viewport) ───────────────
     st.markdown("<div class='shdr oriel-section-gap'>Venue Snapshot</div>", unsafe_allow_html=True)
     show_cols = ["release_month", "venue", "implied_yoy", "oriel_reference_yoy",
-                 "dislocation_bps", "liquidity_score", "confidence_score", "quote_age_seconds", "market_id"]
+                 "dislocation_bps", "raw_threshold", "threshold_units", "normalization_method",
+                 "liquidity_score", "confidence_score", "quote_age_seconds", "market_id"]
     show = dislocations[show_cols].copy()
     for c in ["implied_yoy", "oriel_reference_yoy", "dislocation_bps", "liquidity_score", "confidence_score"]:
         show[c] = show[c].map(lambda x: f"{x:.4f}" if pd.notna(x) else "\u2014")
@@ -194,7 +201,7 @@ def render_falconx_sim_tab():
 
     st.markdown(
         f"<div style='font-size:0.68rem;color:{TEXT_MUTED};margin-top:8px;'>"
-        "Simulation layer for FalconX discussion. Not the final Hyperliquid production repo \u2014 "
+        "Simulation layer for FalconX discussion. This branch adds explicit venue normalization, ForecastEx ingestion, and a common implied YoY CPI comparison framework. Not the final Hyperliquid production repo \u2014 "
         "designed to discuss architecture, quoting model, and launch package before hard-wiring the oracle publisher.</div>",
         unsafe_allow_html=True,
     )

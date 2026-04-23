@@ -19,6 +19,11 @@ class VenueQuote:
     market_id: str
     question: str
     source_status: str = "LIVE"
+    raw_threshold: Optional[float] = None
+    normalized_threshold: Optional[float] = None
+    threshold_units: str = "yoy_pct"
+    normalization_method: str = "pass_through"
+    methodology_note: Optional[str] = None
 
 @dataclass
 class OrielFrontEndPoint:
