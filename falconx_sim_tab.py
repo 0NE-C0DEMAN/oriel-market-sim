@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -14,6 +16,8 @@ from ui.tokens import (
     BG_ELEVATED, DESK_TABLE_HEADER_PX, DESK_TABLE_PAD_PX, DESK_TABLE_ROW_PX,
     GOLD, NEGATIVE, POSITIVE, SERIES2, SERIES_MUTE, TEXT_MUTED, TEXT_SEC, WARNING,
 )
+
+_CACHE_TTL_SECONDS = 60  # auto-refresh every 60s
 
 
 def _fmt0(v):
@@ -37,15 +41,16 @@ def render_falconx_sim_tab():
         st.markdown("<div class='ctrl-vd-label' style='margin-bottom:6px;'>&nbsp;</div>", unsafe_allow_html=True)
         live_data = st.toggle("Live Data", value=True, key="sim_live")
 
+    import os
     if live_data:
-        import os
         os.environ["KALSHI_ENABLE_LIVE_CPI"] = "true"
-        st.cache_data.clear()
     else:
-        import os
         os.environ["KALSHI_ENABLE_LIVE_CPI"] = "false"
 
-    front_df, dislocations, status = load_front_end_market_snapshot(cfg)
+    # TTL bust: integer bucket changes every _CACHE_TTL_SECONDS so Streamlit
+    # re-runs the ingestion automatically on the next interaction after expiry.
+    ttl_bust = int(time.time() // _CACHE_TTL_SECONDS)
+    front_df, dislocations, status = load_front_end_market_snapshot(cfg, _ttl_bust=ttl_bust)
 
     # ── Feed status badge ─────────────────────────────────────────────────
     feed_parts = status.split(" | ")

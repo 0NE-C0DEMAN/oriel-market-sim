@@ -4,6 +4,12 @@ from typing import List, Tuple
 import os
 import pandas as pd
 
+try:
+    import streamlit as st
+    _HAS_ST = True
+except ImportError:
+    _HAS_ST = False
+
 from .common import VenueQuote, OrielFrontEndPoint, DislocationRow
 from .config.markets import HarnessConfig
 from venues.kalshi.live_data import build_live_cpi_feed
@@ -35,6 +41,23 @@ def _sample_quotes(path: Path) -> list[VenueQuote]:
     return out
 
 
+def _mom_to_yoy(mom_threshold: float) -> float:
+    """Convert month-over-month CPI threshold to annualized YoY equivalent.
+
+    Kalshi contracts use M/M changes (0.1%, 0.2%, etc.) while the sim
+    harness and Polymarket use YoY levels (2.8%, 3.0%, etc.).  Simple
+    annualization: YoY ~ M/M * 12.
+    """
+    return mom_threshold * 12.0
+
+
+def _kalshi_month_to_label(maturity) -> str:
+    """Format Kalshi maturity to 'Mon YYYY' to match Polymarket/sample convention."""
+    if hasattr(maturity, 'strftime'):
+        return maturity.strftime("%b %Y")  # "Apr 2026" — matches Polymarket
+    return str(maturity)
+
+
 def _ingest_kalshi_front_end(config: HarnessConfig) -> list[VenueQuote]:
     os.environ.setdefault("KALSHI_TIMEOUT_SECONDS", "3")
     os.environ.setdefault("KALSHI_MAX_RETRIES", "1")
@@ -44,7 +67,7 @@ def _ingest_kalshi_front_end(config: HarnessConfig) -> list[VenueQuote]:
     feed_status = runtime_meta.get('feed_status', 'LIVE') if isinstance(runtime_meta, dict) else 'LIVE'
     out: list[VenueQuote] = []
     for snap in snapshots[:config.max_front_months]:
-        mat_label = snap.maturity.strftime("%Y-%m") if hasattr(snap.maturity, 'strftime') else str(snap.maturity)
+        mat_label = _kalshi_month_to_label(snap.maturity)
         for bt in snap.binary_thresholds:
             obs = bt.observation
             bid = obs.price_selection.bid if obs and obs.price_selection else None
@@ -56,10 +79,13 @@ def _ingest_kalshi_front_end(config: HarnessConfig) -> list[VenueQuote]:
             ticker = obs.contract_ticker if obs else f"KXCPI-{mat_label}-T{bt.threshold}"
             confidence = 1.0 / (1.0 + (spread or 0.0) * 10.0)
             liquidity = min(1.0, (oi + vol) / 500.0)
+            # Convert M/M threshold to YoY so it's on the same scale as
+            # Polymarket and Chris's sample CSV (both YoY).
+            yoy_threshold = _mom_to_yoy(float(bt.threshold))
             out.append(VenueQuote(
                 venue='Kalshi',
                 release_month=mat_label,
-                threshold=float(bt.threshold),
+                threshold=yoy_threshold,
                 bid=bid, ask=ask, mid=mid, spread=spread,
                 volume=vol, open_interest=oi,
                 quote_age_seconds=None,
@@ -153,7 +179,7 @@ def compute_dislocations(front_df: pd.DataFrame, ref_df: pd.DataFrame) -> pd.Dat
     return out.sort_values(['release_month', 'venue', 'dislocation_bps'])
 
 
-def load_front_end_market_snapshot(config: HarnessConfig | None = None) -> Tuple[pd.DataFrame, pd.DataFrame, str]:
+def load_front_end_market_snapshot(config: HarnessConfig | None = None, _ttl_bust: int = 0) -> Tuple[pd.DataFrame, pd.DataFrame, str]:
     config = config or HarnessConfig()
     all_quotes: list[VenueQuote] = []
     status_parts = []
