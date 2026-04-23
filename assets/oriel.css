@@ -53,7 +53,34 @@ html,body{{
 .stMain{{overflow-x:hidden!important;}}
 #MainMenu,footer,header{{visibility:hidden;}}
 
-/* ── Sliders — use Streamlit defaults (no custom gold overrides) ──────── */
+/* ── Sliders — clean dark-themed (gold filled, dark unfilled) ──────── */
+/* Override Streamlit's inline slider-thumb styling with the Oriel gold */
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]{{
+  background:{GOLD}!important;
+  border:2px solid {GOLD}!important;
+  width:13px!important;height:13px!important;
+  box-shadow:0 0 0 3px rgba(212,168,90,0.18)!important;
+  transition:box-shadow 0.15s ease!important;
+}}
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]:hover{{
+  box-shadow:0 0 0 5px rgba(212,168,90,0.25)!important;
+}}
+/* The slider value tooltip (number above thumb) */
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]+div{{
+  color:{GOLD}!important;font-weight:600!important;font-size:0.72rem!important;
+  background:transparent!important;
+}}
+/* Slider label text (above slider) */
+[data-testid="stSlider"] label,
+[data-testid="stSlider"] [data-testid="stWidgetLabel"]{{
+  font-size:0.66rem!important;letter-spacing:0.08em!important;
+  text-transform:uppercase!important;color:{TEXT_MUTED}!important;
+  font-weight:600!important;
+}}
+/* Tick labels (min / max at ends) */
+[data-testid="stSlider"] [data-baseweb="slider"] [data-testid="stSliderTickBar"]{{
+  font-size:0.6rem!important;color:{TEXT_MUTED}!important;padding-top:4px!important;
+}}
 /* Toggle switch — gold when on */
 [data-testid="stBaseButton-elementToolbar"]{{display:none!important;}}
 [data-baseweb="toggle"] span{{

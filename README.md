@@ -15,15 +15,15 @@ streamlit run app.py
 
 ## What it does
 
-- **Three-venue live ingestion**: Kalshi + Polymarket + ForecastEx, with sample fallback where needed
-- **Cross-venue normalization**: all venue contracts mapped onto a common implied YoY CPI basis before Oriel weighting
+- **Three-venue live ingestion (US headline CPI only)**: Kalshi (`KXCPI` series), Polymarket (Gamma API, non-US inflation markets excluded via `exclude_country_keywords`), ForecastEx (CSV pairs feed, `CPIY_` product prefix — filters out Canada/HK/Japan/India/Spain/Singapore/Germany/US-Core)
+- **Cross-venue normalization** onto a common **normalized implied YoY CPI** basis before Oriel weighting
+- **Liquidity / stability simulation loop**: spread capture vs directional PnL split, liquidity multiplier, effective spread tightening, inventory mean-reversion
 - **Cross-venue contribution panel**: per-month weight breakdown showing how each venue feeds the Oriel reference
 - **Execution snapshot**: Kalshi-native threshold ladder vs the cross-venue Oriel reference
-- **Front-end dislocation analytics**: venue-implied YoY vs Oriel reference, scatter + confidence scoring
-- **Market-making backtest**: spread-based PnL loop with inventory tracking
+- **Front-end dislocation analytics**: venue-implied YoY vs Oriel reference, high-contrast scatter (gold / cyan / green) with liquidity-weighted marker sizes, 11px floor so low-liquidity venues stay visually legible
+- **Market-making backtest**: 6-cell KPI strip (PnL, Fills, Fill Rate, Max Inventory, Market Stability, Liquidity Sustainability)
 - **Parameter sweep heatmap**: quoted spread vs launch notional vs backtest PnL
-- **Interactive controls**: spread slider (bp), launch package selector ($MM), refresh toggle
-- **Oriel design language**: full CSS injection, KPI strips, desk tables, gold-themed charts
+- **Oriel design language**: full CSS injection, KPI strips, desk tables, gold-themed charts, `automargin` axis titles for clean separation from curves and container walls
 
 ## Normalization methodology (current FalconX branch)
 

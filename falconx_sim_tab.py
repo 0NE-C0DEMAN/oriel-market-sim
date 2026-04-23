@@ -75,7 +75,8 @@ def render_falconx_sim_tab():
     st.markdown(f"<div style='margin:6px 0 12px;'>{badges}</div>", unsafe_allow_html=True)
     st.markdown(
         f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:-2px 0 12px;'>"
-        "Normalization basis: all venues are mapped onto a common <b>implied YoY CPI</b> basis before Oriel weighting. Kalshi monthly thresholds use compounded annualization ((1+m)^12 - 1); Polymarket and ForecastEx pass through unless contract scale implies monthly normalization."
+        "Cross-venue view: <b>normalized implied YoY CPI</b>. Venue contracts are normalized onto a common annualized implied CPI basis for comparison. "
+        "Kalshi monthly thresholds use compounded annualization ((1+m)^12 \u2212 1); Polymarket and ForecastEx pass through unless contract scale implies monthly normalization."
         "</div>",
         unsafe_allow_html=True,
     )
@@ -118,22 +119,37 @@ def render_falconx_sim_tab():
     with col_l:
         st.markdown("<div class='shdr'>Venue Dislocations vs Oriel Reference</div>", unsafe_allow_html=True)
         fig = go.Figure()
-        for venue, color in [("Kalshi", GOLD), ("Polymarket", SERIES2), ("ForecastEx", POSITIVE)]:
+        # Bright, high-contrast palette: gold (Kalshi exec), cyan (Polymarket), green (ForecastEx).
+        # Polymarket gets a brighter cyan than SERIES2 so it's clearly distinct against the dark surface.
+        venue_palette = [
+            ("Kalshi",     GOLD,       "#0B0F14"),
+            ("Polymarket", "#5CC8FF",  "#0B0F14"),
+            ("ForecastEx", "#22C55E",  "#0B0F14"),
+        ]
+        for venue, fill_color, edge_color in venue_palette:
             sub = dislocations[dislocations["venue"] == venue]
             if sub.empty:
                 continue
+            # Size floor 11 so even zero-liquidity dots stay visually legible,
+            # liquidity scaling adds up to ~14 more on top for depth cueing.
+            sizes = sub["liquidity_score"].clip(lower=0.0, upper=1.0) * 14.0 + 11.0
             fig.add_trace(go.Scatter(
                 x=sub["release_month"], y=sub["dislocation_bps"],
                 mode="markers", name=venue,
-                marker=dict(color=color, size=sub["liquidity_score"] * 18 + 4, opacity=0.7,
-                            line=dict(color=color, width=1)),
-                hovertemplate=f"{venue}<br>%{{x}}<br>Dislocation: %{{y:.1f}} bp<extra></extra>",
+                marker=dict(
+                    color=fill_color, size=sizes, opacity=0.88,
+                    line=dict(color=edge_color, width=1.5),
+                ),
+                hovertemplate=f"<b>{venue}</b><br>%{{x}}<br>Dislocation: <b>%{{y:.1f}} bp</b><extra></extra>",
             ))
         fig.add_hline(y=0, line_color=SERIES_MUTE, line_dash="dash", line_width=1)
         fig.update_layout(**_layout(
-            height=310,
-            xaxis=_xaxis(title="Release Month"),
-            yaxis=_yaxis(title="Dislocation (bp)"),
+            height=340,
+            margin=dict(l=78, r=32, t=32, b=72),
+            xaxis=_xaxis(title=dict(text="Release Month", font=dict(color=TEXT_SEC, size=11), standoff=14),
+                         automargin=True),
+            yaxis=_yaxis(title=dict(text="Dislocation (bp)", font=dict(color=TEXT_SEC, size=11), standoff=14),
+                         automargin=True),
         ))
         st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_disl")
 
@@ -153,13 +169,19 @@ def render_falconx_sim_tab():
             hovertemplate="Step %{x}<br>Inventory: $%{y:,.0f}<extra></extra>",
         ))
         pnl_fig.update_layout(**_layout(
-            height=310,
-            xaxis=_xaxis(title="Step"),
-            yaxis=_yaxis(title="PnL ($)"),
+            height=340,
+            margin=dict(l=78, r=78, t=32, b=72),
+            xaxis=_xaxis(title=dict(text="Step", font=dict(color=TEXT_SEC, size=11), standoff=14),
+                         automargin=True),
+            yaxis=_yaxis(title=dict(text="PnL ($)", font=dict(color=TEXT_SEC, size=11), standoff=14),
+                         automargin=True),
         ))
         pnl_fig.update_layout(
-            yaxis2=dict(title="Inventory ($)", overlaying="y", side="right",
-                        showgrid=False, tickfont=dict(color=TEXT_SEC)),
+            yaxis2=dict(
+                title=dict(text="Inventory ($)", font=dict(color=TEXT_SEC, size=11), standoff=14),
+                overlaying="y", side="right",
+                showgrid=False, tickfont=dict(color=TEXT_SEC), automargin=True,
+            ),
         )
         st.plotly_chart(pnl_fig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_pnl")
 
@@ -225,11 +247,13 @@ def render_falconx_sim_tab():
         textfont=dict(size=11, color="#e6edf3", family="DM Mono, monospace"),
     ))
     hfig.update_layout(**_layout(
-        height=300,
-        xaxis=_xaxis(title="Quoted Spread"),
-        yaxis=_yaxis(title="Launch Package"),
+        height=320,
+        margin=dict(l=92, r=44, t=32, b=72),
+        xaxis=_xaxis(title=dict(text="Quoted Spread", font=dict(color=TEXT_SEC, size=11), standoff=14),
+                     automargin=True),
+        yaxis=_yaxis(title=dict(text="Launch Package", font=dict(color=TEXT_SEC, size=11), standoff=14),
+                     automargin=True),
     ))
-    hfig.update_layout(margin=dict(l=72, r=40, t=28, b=64))
     st.plotly_chart(hfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_heat")
 
     # ── Sweep table (scrollable, 6-row viewport) ─────────────────────────
