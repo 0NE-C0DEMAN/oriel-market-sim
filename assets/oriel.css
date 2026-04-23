@@ -63,18 +63,27 @@ html,body{{
 [data-testid="stSlider"] [data-baseweb="slider"] div[data-testid="stTickBar"]{{
   display:none!important;
 }}
-/* Full track background (unfilled = dark) */
+/* Track (the bar behind the thumb) */
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]~div{{
+  background:{BG_ELEVATED}!important;
+}}
+/* Override ALL inner track divs to dark, then re-gold only the filled side */
+[data-testid="stSlider"] [data-baseweb="slider"] div[style*="background"]{{
+  background:{BG_ELEVATED}!important;
+}}
+/* The actual track container */
 [data-testid="stSlider"] [data-baseweb="slider"]>div>div{{
   background:{BG_ELEVATED}!important;border:1px solid {BORDER}!important;
   border-radius:4px!important;height:4px!important;
 }}
-/* Filled portion only (left of thumb = gold) */
+/* Filled portion — Streamlit uses InnerTrack with a specific test id */
+[data-testid="stSlider"] [data-testid="stSliderTrackFill"],
 [data-testid="stSlider"] [data-baseweb="slider"]>div>div>div:first-child{{
   background:{GOLD}!important;border-radius:4px!important;
 }}
-/* Unfilled portion (right of thumb = stays dark via parent) */
-[data-testid="stSlider"] [data-baseweb="slider"]>div>div>div:nth-child(2){{
-  background:transparent!important;
+/* Everything AFTER the thumb = unfilled = dark */
+[data-testid="stSlider"] [data-testid="stSliderTrackRemaining"]{{
+  background:{BG_ELEVATED}!important;
 }}
 /* Slider value label */
 [data-testid="stSlider"] [data-testid="stMarkdownContainer"] p{{

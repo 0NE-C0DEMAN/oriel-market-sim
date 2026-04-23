@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from oriel_hl_sim.config.markets import HarnessConfig
-from oriel_hl_sim.ingestion import load_front_end_market_snapshot
+from oriel_hl_sim.ingestion import load_front_end_market_snapshot, compute_venue_contribution_summary
 from oriel_hl_sim.simulation import run_backtest, run_parameter_sweep
 from ui.charts import _layout, _xaxis, _yaxis
 from ui.plotly_theme import PLOTLY_CONFIG
@@ -148,12 +148,44 @@ def render_falconx_sim_tab():
         )
         st.plotly_chart(pnl_fig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_pnl")
 
-    # ── Venue snapshot table (scrollable, 6-row viewport) ───────────────
-    st.markdown("<div class='shdr oriel-section-gap'>Venue Snapshot</div>", unsafe_allow_html=True)
+    # ── Cross-venue contribution summary ─────────────────────────────────
+    venue_summary = compute_venue_contribution_summary(
+        front_df, dislocations[["release_month", "oriel_reference_yoy"]].drop_duplicates()
+    )
+    st.markdown("<div class='shdr oriel-section-gap'>Cross-Venue Contribution</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:-2px 0 8px;'>"
+        "Shows how each venue contributes upstream to the Oriel reference by release month. "
+        "The execution-facing ladder below remains Kalshi-native where available.</div>",
+        unsafe_allow_html=True,
+    )
+    vshow_cols = ["release_month", "venue", "implied_yoy", "oriel_reference_yoy",
+                  "weight_pct", "liquidity_score", "confidence_score"]
+    vshow = venue_summary[vshow_cols].copy() if not venue_summary.empty else pd.DataFrame(columns=vshow_cols)
+    for c in ["implied_yoy", "oriel_reference_yoy", "liquidity_score", "confidence_score"]:
+        if c in vshow.columns:
+            vshow[c] = vshow[c].map(lambda x: f"{x:.4f}" if pd.notna(x) else "\u2014")
+    if "weight_pct" in vshow.columns:
+        vshow["weight_pct"] = vshow["weight_pct"].map(lambda x: f"{x:.1f}%" if pd.notna(x) else "\u2014")
+    vtfig = _plotly_desk_table(vshow, gold_column="weight_pct")
+    vcontent_h = DESK_TABLE_HEADER_PX + len(vshow) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
+    vviewport_h = DESK_TABLE_HEADER_PX + min(len(vshow), 6) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
+    vtfig.update_layout(height=vcontent_h)
+    with st.container(height=vviewport_h, border=False, key="scroll_sim_venue_contrib"):
+        st.plotly_chart(vtfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_venue_contrib_tbl")
+
+    # ── Execution snapshot (Kalshi-native rows vs cross-venue reference) ──
+    st.markdown("<div class='shdr oriel-section-gap'>Execution Snapshot</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:-2px 0 8px;'>"
+        "Kalshi threshold rows shown against the cross-venue Oriel reference. "
+        "Polymarket and ForecastEx are incorporated upstream in normalization and reference weighting.</div>",
+        unsafe_allow_html=True,
+    )
     show_cols = ["release_month", "venue", "implied_yoy", "oriel_reference_yoy",
-                 "dislocation_bps", "raw_threshold", "threshold_units", "normalization_method",
-                 "liquidity_score", "confidence_score", "quote_age_seconds", "market_id"]
+                 "dislocation_bps", "liquidity_score", "confidence_score", "quote_age_seconds", "market_id"]
     show = dislocations[show_cols].copy()
+    show = show[show["venue"].eq("Kalshi")] if (show["venue"] == "Kalshi").any() else show
     for c in ["implied_yoy", "oriel_reference_yoy", "dislocation_bps", "liquidity_score", "confidence_score"]:
         show[c] = show[c].map(lambda x: f"{x:.4f}" if pd.notna(x) else "\u2014")
     tfig = _plotly_desk_table(show, gold_column="dislocation_bps")

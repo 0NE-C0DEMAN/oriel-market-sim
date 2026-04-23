@@ -308,6 +308,36 @@ def compute_dislocations(front_df: pd.DataFrame, ref_df: pd.DataFrame) -> pd.Dat
 
 
 
+def compute_venue_contribution_summary(front_df: pd.DataFrame, ref_df: pd.DataFrame) -> pd.DataFrame:
+    """Summarize how each venue contributes to the Oriel reference by release month.
+
+    One row per (release_month, venue) showing the normalized implied YoY point,
+    liquidity / confidence inputs, and the venue's relative weight in the Oriel
+    reference construction for that month.
+    """
+    cols = [
+        'release_month', 'venue', 'implied_yoy', 'liquidity_score',
+        'confidence_score', 'oriel_weight', 'weight_pct', 'oriel_reference_yoy'
+    ]
+    if front_df.empty:
+        return pd.DataFrame(columns=cols)
+
+    tmp = front_df.copy()
+    tmp['oriel_weight'] = (0.6 * tmp['confidence_score'] + 0.4 * tmp['liquidity_score']).clip(lower=0.01)
+    tmp['month_total_weight'] = tmp.groupby('release_month')['oriel_weight'].transform('sum').replace(0, pd.NA)
+    tmp['weight_pct'] = (tmp['oriel_weight'] / tmp['month_total_weight']) * 100.0
+
+    out = tmp.groupby(['release_month', 'venue'], as_index=False).agg(
+        implied_yoy=('implied_yoy', 'mean'),
+        liquidity_score=('liquidity_score', 'mean'),
+        confidence_score=('confidence_score', 'mean'),
+        oriel_weight=('oriel_weight', 'sum'),
+        weight_pct=('weight_pct', 'sum'),
+    )
+    out = out.merge(ref_df, on='release_month', how='left')
+    return out.sort_values(['release_month', 'venue']).reset_index(drop=True)
+
+
 def load_front_end_market_snapshot(config: HarnessConfig | None = None, _ttl_bust: int = 0) -> Tuple[pd.DataFrame, pd.DataFrame, str]:
     config = config or HarnessConfig()
     all_quotes: list[VenueQuote] = []
