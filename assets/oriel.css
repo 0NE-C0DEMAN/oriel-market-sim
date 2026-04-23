@@ -53,47 +53,7 @@ html,body{{
 .stMain{{overflow-x:hidden!important;}}
 #MainMenu,footer,header{{visibility:hidden;}}
 
-/* ── Sliders & Toggles — gold-themed, compact ───────────────────────────── */
-/* Slider thumb */
-[data-testid="stSlider"] [data-baseweb="slider"] div[role="slider"]{{
-  background:{GOLD}!important;border-color:{GOLD}!important;
-  width:14px!important;height:14px!important;
-  box-shadow:0 0 8px rgba(212,168,90,0.35)!important;
-}}
-[data-testid="stSlider"] [data-baseweb="slider"] div[data-testid="stTickBar"]{{
-  display:none!important;
-}}
-/* Track (the bar behind the thumb) */
-[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]~div{{
-  background:{BG_ELEVATED}!important;
-}}
-/* Override ALL inner track divs to dark, then re-gold only the filled side */
-[data-testid="stSlider"] [data-baseweb="slider"] div[style*="background"]{{
-  background:{BG_ELEVATED}!important;
-}}
-/* The actual track container */
-[data-testid="stSlider"] [data-baseweb="slider"]>div>div{{
-  background:{BG_ELEVATED}!important;border:1px solid {BORDER}!important;
-  border-radius:4px!important;height:4px!important;
-}}
-/* Filled portion — Streamlit uses InnerTrack with a specific test id */
-[data-testid="stSlider"] [data-testid="stSliderTrackFill"],
-[data-testid="stSlider"] [data-baseweb="slider"]>div>div>div:first-child{{
-  background:{GOLD}!important;border-radius:4px!important;
-}}
-/* Everything AFTER the thumb = unfilled = dark */
-[data-testid="stSlider"] [data-testid="stSliderTrackRemaining"]{{
-  background:{BG_ELEVATED}!important;
-}}
-/* Slider value label */
-[data-testid="stSlider"] [data-testid="stMarkdownContainer"] p{{
-  color:{TEXT_SEC}!important;font-size:0.72rem!important;
-}}
-/* Tick labels */
-[data-testid="stSlider"] [data-baseweb="slider"] [data-testid="stTickBarMin"],
-[data-testid="stSlider"] [data-baseweb="slider"] [data-testid="stTickBarMax"]{{
-  color:{TEXT_MUTED}!important;font-size:10px!important;
-}}
+/* ── Sliders — use Streamlit defaults (no custom gold overrides) ──────── */
 /* Toggle switch — gold when on */
 [data-testid="stBaseButton-elementToolbar"]{{display:none!important;}}
 [data-baseweb="toggle"] span{{
