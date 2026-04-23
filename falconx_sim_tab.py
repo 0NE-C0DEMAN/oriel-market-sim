@@ -24,6 +24,15 @@ def _fmt0(v):
     return f"${v:,.0f}"
 
 
+def _score_color(score: float) -> str:
+    """Traffic-light color for 0-100 stability/sustainability scores."""
+    if score >= 70:
+        return POSITIVE
+    if score >= 50:
+        return WARNING
+    return NEGATIVE
+
+
 def render_falconx_sim_tab():
     cfg = HarnessConfig()
 
@@ -79,20 +88,26 @@ def render_falconx_sim_tab():
                       launch_notional_usd=launch_notional_mm * 1_000_000, config=cfg)
     s = bt.summary
 
-    # ── KPI strip ─────────────────────────────────────────────────────────
+    # ── KPI strip (P2 liquidity upgrade: 6 cells) ─────────────────────────
     pnl_col = POSITIVE if s["total_pnl_usd"] >= 0 else NEGATIVE
+    stability_col = _score_color(s.get("market_stability_score", 0.0))
+    sustain_col = _score_color(s.get("liquidity_self_sufficiency_score", 0.0))
     st.markdown(f"""
     <div class='kpi-strip-wrap' style='margin-bottom:10px'>
       <div class='kpi-strip-ribbon'>SIMULATION BACKTEST \u00b7 Spread {spread_bps}bp \u00b7 ${launch_notional_mm}MM launch</div>
-      <div class='kpi-strip' style='display:grid;grid-template-columns:repeat(4,minmax(0,1fr))'>
+      <div class='kpi-strip' style='display:grid;grid-template-columns:repeat(6,minmax(0,1fr))'>
         <div class='kpi-cell'><div class='kpi-micro'>Backtest PnL</div>
           <div class='kpi-value kpi-value--lead' style='color:{pnl_col};'>{_fmt0(s["total_pnl_usd"])}</div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Fills</div>
           <div class='kpi-value'>{s["fills"]:,}</div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Fill Rate</div>
+          <div class='kpi-value'>{s.get("fill_rate_pct", 0.0):.1f}%</div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Max Inventory</div>
           <div class='kpi-value'>{_fmt0(s["max_inventory_usd"])}</div></div>
-        <div class='kpi-cell'><div class='kpi-micro'>Avg Abs Dislocation</div>
-          <div class='kpi-value' style='color:{WARNING};'>{s["avg_abs_dislocation_bps"]:.1f} bp</div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Market Stability</div>
+          <div class='kpi-value' style='color:{stability_col};'>{s.get("market_stability_score", 0.0):.0f}</div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Liquidity Sustainability</div>
+          <div class='kpi-value' style='color:{sustain_col};'>{s.get("liquidity_self_sufficiency_score", 0.0):.0f}</div></div>
       </div>
     </div>
     """, unsafe_allow_html=True)
