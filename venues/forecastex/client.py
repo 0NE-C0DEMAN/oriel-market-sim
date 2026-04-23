@@ -106,6 +106,12 @@ class ForecastExClient:
             # to focus on CPI-style products.
             if "CPI" not in text:
                 continue
+            # US YoY headline CPI only — matches Kalshi (KXCPI, US) and Polymarket (US CPI).
+            # Excludes CACPI (Canada), HKCPI (Hong Kong), CPIJP (Japan), CPIIN (India),
+            # CPISP (Spain), SGCPI (Singapore), CPIGE (Germany), CPIC (US Core — different series).
+            pc_upper = product_code.upper().strip()
+            if not pc_upper.startswith("CPIY_"):
+                continue
 
             release_month = self._extract_release_month(text) or "Unknown"
             threshold = self._extract_threshold(event_question) or self._extract_threshold(product_code)
