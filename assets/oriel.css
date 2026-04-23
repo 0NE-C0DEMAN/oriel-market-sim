@@ -1,0 +1,944 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ── Base — avoid setting color on [class*="css"] (breaks Streamlit widget chrome) ── */
+html{{scroll-behavior:smooth;}}
+html,body{{
+    font-family:'Inter',sans-serif;
+    color:{TEXT_PRI};
+    background:{BG_APP};
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+}}
+::selection{{
+    background:rgba(212,168,90,0.22)!important;color:{TEXT_PRI}!important;
+}}
+.stApp{{
+    color:{TEXT_PRI};
+    --st-widget-border-color:transparent!important;
+    --oriel-radius-sm:{RADIUS_SM}px;
+    --oriel-radius-md:{RADIUS_MD}px;
+    --oriel-radius-lg:{RADIUS_LG}px;
+    --oriel-glow-gold:0 0 42px rgba(212,168,90,0.07);
+    /* Thin, dark scrollbars — used only on table surfaces (auto = bar appears only when content overflows) */
+    --oriel-scroll-size:6px;
+    --oriel-scroll-thumb:rgba(80,100,125,0.75);
+    --oriel-scroll-thumb-hover:rgba(110,135,165,0.9);
+    --oriel-scroll-track:rgba(8,10,14,0.72);
+    --oriel-scroll-border:rgba(0,0,0,0.45);
+    background:
+        radial-gradient(ellipse 95% 55% at 50% -8%,rgba(212,168,90,0.07) 0%,transparent 58%),
+        radial-gradient(ellipse 55% 35% at 100% 0%,rgba(59,130,246,0.04) 0%,transparent 50%),
+        radial-gradient(ellipse 50% 40% at 0% 100%,rgba(18,24,33,0.85) 0%,transparent 55%),
+        {BG_APP}!important;
+}}
+.block-container,[class*="stMarkdown"] p{{
+    font-family:'Inter',sans-serif;
+}}
+/* Markdown / note links (avoid Base Web widget anchors) */
+[data-testid="stMarkdownContainer"] a,
+.note-box a,.p2-wrap a,.oriel-page-head a{{
+    color:{INFO}!important;text-decoration:none!important;
+    border-bottom:1px solid rgba(59,130,246,0.35)!important;
+    transition:color 0.15s,border-color 0.15s!important;
+}}
+[data-testid="stMarkdownContainer"] a:hover,
+.note-box a:hover,.p2-wrap a:hover,.oriel-page-head a:hover{{
+    color:{GOLD}!important;border-bottom-color:rgba(212,168,90,0.5)!important;
+}}
+/* st.caption and similar — Streamlit often renders these too faint on dark base */
+[data-testid="stCaption"],[data-testid="stCaption"] p,[data-testid="stCaption"] span{{
+    color:{TEXT_SEC}!important;opacity:1!important;
+}}
+.block-container{{padding:0 3.5rem 3.5rem!important;max-width:100%!important;margin:0 auto!important;overflow-x:hidden!important;}}
+.stMain{{overflow-x:hidden!important;}}
+#MainMenu,footer,header{{visibility:hidden;}}
+/* Page title block (index name + version + description) */
+.oriel-page-head{{padding:2px 0 1px;margin-bottom:2px;}}
+.oriel-page-head .oriel-page-title{{
+    font-size:0.96rem;font-weight:600;color:{TEXT_PRI};letter-spacing:-0.02em;
+    text-shadow:0 1px 22px rgba(0,0,0,0.35);
+}}
+.oriel-page-head .oriel-page-desc{{font-size:0.78rem;color:{TEXT_MUTED};margin-top:6px;line-height:1.5;max-width:52rem;}}
+/* Compact controls row */
+.st-key-idx_ctrl_hc,.st-key-idx_ctrl_cpi{{margin-bottom:6px!important;}}
+/* All columns in the controls row: flex-centered vertically */
+.st-key-idx_ctrl_hc [data-testid="stVerticalBlock"],
+.st-key-idx_ctrl_cpi [data-testid="stVerticalBlock"]{{
+  gap:0!important;display:flex!important;flex-direction:column!important;justify-content:center!important;
+}}
+/* Valuation date / selector label — inline, right-aligned, vertically centered via parent flex */
+.ctrl-vd-label{{font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;
+  color:{TEXT_MUTED};font-weight:600;margin:0 0 4px 0;text-align:left;line-height:1.1;}}
+/* Date input in controls row — compact right-side picker */
+.st-key-idx_ctrl_hc [data-testid="stDateInput"],
+.st-key-idx_ctrl_cpi [data-testid="stDateInput"]{{
+  max-width:140px!important;margin-bottom:0!important;
+}}
+.st-key-idx_ctrl_hc [data-testid="stDateInput"] input,
+.st-key-idx_ctrl_cpi [data-testid="stDateInput"] input{{
+  font-size:0.68rem!important;padding:3px 8px!important;height:26px!important;
+}}
+.st-key-idx_ctrl_hc [data-testid="stElementContainer"]:has([data-testid="stDateInput"]),
+.st-key-idx_ctrl_cpi [data-testid="stElementContainer"]:has([data-testid="stDateInput"]),
+.st-key-idx_ctrl_hc [data-testid="stElementContainer"]:has(.ctrl-vd-label),
+.st-key-idx_ctrl_cpi [data-testid="stElementContainer"]:has(.ctrl-vd-label){{
+  padding:0!important;margin:0!important;
+}}
+/* Toggle in controls row */
+.st-key-idx_ctrl_hc [data-testid="stElementContainer"]:has([data-baseweb="toggle"]),
+.st-key-idx_ctrl_cpi [data-testid="stElementContainer"]:has([data-baseweb="toggle"]){{
+  padding:0!important;margin:0!important;
+}}
+
+/* Section rhythm + reviewer-facing hints (Kalshi / governance) */
+.oriel-section-gap{{margin-top:0.8rem!important;}}
+.oriel-hint{{
+    font-size:0.68rem!important;color:{TEXT_MUTED}!important;margin:0 0 11px 0!important;
+    line-height:1.45!important;max-width:56rem;
+}}
+.oriel-hint .oriel-hint-mono{{font-family:'DM Mono',monospace!important;color:{TEXT_SEC}!important;font-weight:400!important;}}
+.oriel-kalshi-footer{{
+    margin-top:2.5rem!important;padding:16px 0 4px!important;
+    border-top:1px solid rgba(34,48,66,0.55)!important;
+    font-size:0.62rem!important;color:{TEXT_MUTED}!important;letter-spacing:0.03em!important;
+    line-height:1.55!important;max-width:52rem;
+}}
+.oriel-kalshi-footer strong{{font-weight:500!important;color:{TEXT_SEC}!important;}}
+
+/* ── Nav ── */
+.oriel-nav{{
+    background:rgba(18,24,33,0.92);
+    backdrop-filter:saturate(1.15) blur(12px);
+    -webkit-backdrop-filter:saturate(1.15) blur(12px);
+    padding:0 3.5rem;display:flex;align-items:center;justify-content:space-between;
+    min-height:58px;height:58px;position:sticky;top:0;z-index:999;
+    border-bottom:1px solid rgba(34,48,66,0.88);
+    box-shadow:0 4px 24px rgba(0,0,0,0.35),inset 0 -1px 0 rgba(212,168,90,0.07);
+    margin:0 -3.5rem;
+}}
+.nav-left{{display:flex;align-items:center;gap:16px;}}
+.oriel-logo{{
+    height:64px;display:block;filter:brightness(1.78) contrast(1.08);
+    transition:filter 0.28s ease,transform 0.28s ease,opacity 0.28s ease;
+}}
+.oriel-logo:hover{{filter:brightness(1.95) contrast(1.05);transform:scale(1.03);opacity:0.98;}}
+.nav-pipe{{width:1px;height:20px;background:{BORDER_STR};margin:0 4px;}}
+.nav-label{{font-size:0.72rem;color:{TEXT_MUTED};font-weight:400;letter-spacing:0.12em;text-transform:uppercase;}}
+.nav-home-link{{display:flex;align-items:center;text-decoration:none!important;border-bottom:none!important;}}
+.nav-link{{border-bottom:none!important;text-decoration:none!important;transition:color 0.18s ease, opacity 0.18s ease;}}
+.nav-link:hover{{color:{TEXT_PRI}!important;opacity:0.98;}}
+.nav-label-active{{color:{TEXT_PRI};font-weight:600;}}
+.nav-right{{display:flex;align-items:center;gap:10px;}}
+.nav-clock{{
+    font-family:'DM Mono',monospace;font-size:0.72rem;color:{TEXT_SEC};font-weight:400;letter-spacing:0.02em;
+    font-variant-numeric:tabular-nums;
+}}
+.nav-time-dot{{display:inline-block;width:7px;height:7px;border-radius:50%;background:{POSITIVE};margin-right:6px;box-shadow:0 0 8px rgba(34,197,94,0.6);}}
+.nav-badge{{font-size:0.62rem;font-weight:400;letter-spacing:0.08em;text-transform:uppercase;padding:4px 11px;border-radius:999px;font-family:'Inter',sans-serif;}}
+.nav-badge-live{{background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);color:{POSITIVE};}}
+.nav-badge-warn{{background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);color:{WARNING};}}
+.nav-badge-mute{{background:rgba(111,128,147,0.15);border:1px solid {BORDER_STR};color:{TEXT_MUTED};}}
+.nav-pill{{background:rgba(212,168,90,0.1);border:1px solid rgba(212,168,90,0.25);border-radius:999px;padding:3px 11px;font-size:0.6rem;font-weight:400;letter-spacing:0.1em;text-transform:uppercase;color:{GOLD};}}
+
+/* ── Tabs ── */
+.stTabs [data-baseweb="tab-list"]{{
+    background:{BG_APP}!important;padding:0 3.5rem!important;gap:0!important;
+    border-bottom:none!important;border:none!important;margin:0 -3.5rem!important;
+}}
+[data-testid="stTabs"]>div:first-child{{border-bottom:none!important;border:none!important;}}
+[data-testid="stTabs"]{{border:none!important;outline:none!important;}}
+.stTabs [data-baseweb="tab"]{{
+    background:rgba(18,24,33,0.75)!important;
+    border:1px solid rgba(42,52,65,0.65)!important;
+    border-bottom:2px solid rgba(34,48,66,0.5)!important;
+    color:{TEXT_MUTED}!important;font-size:0.65rem!important;font-weight:500!important;
+    letter-spacing:0.05em!important;padding:12px 16px!important;
+    border-radius:{RADIUS_SM}px {RADIUS_SM}px 0 0!important;text-transform:uppercase!important;
+    transition:color 0.18s,background 0.18s,border-color 0.18s!important;margin-bottom:-1px!important;
+}}
+.stTabs [data-baseweb="tab"]:hover{{
+    color:{TEXT_SEC}!important;background:rgba(230,237,243,0.06)!important;
+    border-color:rgba(62,78,98,0.8)!important;
+}}
+.stTabs [aria-selected="true"]{{
+    color:{GOLD}!important;
+    font-weight:600!important;
+    border:1px solid rgba(212,168,90,0.3)!important;
+    border-bottom:2px solid {GOLD}!important;
+    background:rgba(212,168,90,0.09)!important;
+    box-shadow:0 0 16px rgba(212,168,90,0.06),inset 0 1px 0 rgba(212,168,90,0.08)!important;
+}}
+.stTabs [data-baseweb="tab-panel"]{{
+    padding:14px 0 20px!important;
+    animation:oriel-tab-in 0.38s cubic-bezier(0.22,1,0.36,1) both;
+}}
+@keyframes oriel-tab-in{{
+    from{{opacity:0;transform:translateY(8px);}}
+    to{{opacity:1;transform:translateY(0);}}
+}}
+@media (prefers-reduced-motion:reduce){{
+    .stTabs [data-baseweb="tab-panel"]{{animation:none!important;}}
+    .kpi-strip-wrap,.ip-wrap,.dislo-wrap,[data-testid="stPlotlyChart"]{{transition:none!important;}}
+    .oriel-logo{{transition:none!important;}}
+}}
+.stTabs [data-baseweb="tab-highlight"]{{display:none!important;}}
+
+/* Nested tabs — forward curve vs front maturity (compact segment inside main tab) */
+.stTabs [data-baseweb="tab-panel"] .stTabs [data-baseweb="tab-list"]{{
+    background:rgba(18,24,33,0.6)!important;padding:5px!important;margin:0 0 4px 0!important;
+    border:1px solid rgba(34,48,66,0.7)!important;border-radius:6px!important;gap:3px!important;
+    display:inline-flex!important;width:auto!important;
+}}
+.stTabs [data-baseweb="tab-panel"] .stTabs [data-baseweb="tab"]{{
+    font-size:0.68rem!important;padding:8px 18px!important;letter-spacing:0.06em!important;
+    border-radius:5px!important;margin-bottom:0!important;border-bottom:none!important;
+    min-height:0!important;line-height:1.3!important;height:auto!important;
+}}
+.stTabs [data-baseweb="tab-panel"] .stTabs [data-baseweb="tab"] p{{
+    font-size:0.68rem!important;line-height:1.3!important;margin:0!important;padding:0!important;
+}}
+.stTabs [data-baseweb="tab-panel"] .stTabs [aria-selected="true"]{{
+    background:rgba(212,168,90,0.14)!important;border-bottom:none!important;
+}}
+.stTabs [data-baseweb="tab-panel"] .stTabs [data-baseweb="tab-panel"]{{
+    padding:0!important;animation:none!important;
+}}
+
+/* ── KPI strip: flex stacks; front gold hero, back smaller, slope R/G, pub tertiary ── */
+.kpi-strip-wrap{{
+    margin-bottom:16px;border:1px solid rgba(34,48,66,0.95);border-radius:{RADIUS_MD}px;overflow:hidden;
+    box-shadow:0 10px 36px rgba(0,0,0,0.42),0 0 0 1px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.04);
+    transition:box-shadow 0.35s ease,border-color 0.35s ease;
+}}
+.kpi-strip-wrap:hover{{
+    border-color:rgba(212,168,90,0.22);
+    box-shadow:0 14px 44px rgba(0,0,0,0.48),0 0 0 1px rgba(212,168,90,0.08),var(--oriel-glow-gold),inset 0 1px 0 rgba(255,255,255,0.05);
+}}
+.kpi-strip{{
+    display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;
+    background:rgba(255,255,255,0.02);
+    border-top:1px solid {BORDER_STR};
+}}
+.kpi-cell{{
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;
+    gap:5px;padding:12px 16px 13px;min-height:0;position:relative;
+    border-left:1px solid rgba(34,48,66,0.45);
+    transition:background 0.15s;
+}}
+.kpi-cell:first-child{{border-left:none;}}
+.kpi-cell:hover{{background:{BG_HOVER};}}
+.kpi-strip-ribbon{{
+    font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;
+    color:{TEXT_SEC};font-weight:500;padding:7px 14px 6px;line-height:1.35;
+    background:linear-gradient(180deg,{BG_ELEVATED} 0%,rgba(22,31,43,0.92) 100%);
+    border-bottom:1px solid {BORDER};
+}}
+.kpi-micro{{
+    font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:{TEXT_SEC};
+    font-weight:400;margin:0;line-height:1.3;width:100%;
+}}
+.kpi-value{{
+    font-family:'DM Mono',monospace;font-size:1.08rem;font-weight:400;color:{TEXT_PRI};
+    line-height:1.2;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;
+    margin:0;width:100%;
+}}
+/* Hero: front implied — large + gold */
+.kpi-value.kpi-value--lead{{
+    font-size:1.52rem;font-weight:400;color:{GOLD};letter-spacing:-0.03em;
+}}
+/* Back contract — slightly smaller than strip default */
+.kpi-value.kpi-value--back{{font-size:0.94rem;color:{TEXT_PRI};}}
+/* Term structure delta — green / red on the figure */
+.kpi-value.kpi-slope--pos{{color:{POSITIVE};}}
+.kpi-value.kpi-slope--neg{{color:{NEGATIVE};}}
+.kpi-sub{{
+    font-size:0.62rem;color:#C2CDD8;margin:0;line-height:1.35;min-height:1.35em;
+    font-variant-numeric:tabular-nums;font-family:'DM Mono',monospace;width:100%;
+    font-weight:400;
+}}
+.kpi-sub .pos{{color:{POSITIVE};font-weight:400;}}
+.kpi-sub .neg{{color:{NEGATIVE};font-weight:400;}}
+.kpi-sub .gold{{color:{TEXT_SEC};font-weight:400;}}
+/* Publishability — tertiary; quiet label + small muted status */
+.kpi-cell--pub{{background:rgba(11,15,20,0.28);}}
+.kpi-cell--pub:hover{{background:rgba(18,24,32,0.45);}}
+.kpi-cell--pub .kpi-micro{{
+    font-size:0.52rem;letter-spacing:0.08em;color:{TEXT_MUTED};
+}}
+.kpi-cell--pub .kpi-value.kpi-pub-val{{
+    font-family:'Inter',sans-serif;font-size:0.72rem;font-weight:400;
+    color:{TEXT_MUTED};letter-spacing:0.02em;
+}}
+.kpi-cell--pub .kpi-value.kpi-pub-val.kpi-pub--ok{{color:rgba(34,197,94,0.92)!important;}}
+.kpi-cell--pub .kpi-value.kpi-pub-val.kpi-pub--no{{color:rgba(255,107,107,0.88)!important;}}
+.kpi-cell--pub .kpi-sub{{font-size:0.55rem;color:{TEXT_MUTED};}}
+.kpi-cell--pub .kpi-sub .neg{{color:rgba(255,107,107,0.78);}}
+
+/* ── Section headers (gold rail + clearer hierarchy) ── */
+.shdr,.shdr-major{{
+    position:relative;padding-left:13px!important;
+}}
+.shdr::before,.shdr-major::before{{
+    content:'';position:absolute;left:0;top:0.38em;bottom:0.55em;width:2px;border-radius:2px;
+    background:linear-gradient(180deg,rgba(212,168,90,0.95) 0%,rgba(212,168,90,0.12) 100%);
+    box-shadow:0 0 12px rgba(212,168,90,0.15);
+}}
+.shdr-major::before{{width:3px;top:0.32em;box-shadow:0 0 14px rgba(212,168,90,0.2);}}
+.shdr{{
+    font-size:0.65rem;letter-spacing:0.16em;text-transform:uppercase;
+    color:{TEXT_SEC};font-weight:500;padding-bottom:8px;margin-bottom:14px;
+    border-bottom:1px solid rgba(34,48,66,0.85);
+}}
+.shdr-major{{
+    font-size:0.72rem;letter-spacing:0.14em;color:{TEXT_SEC};font-weight:500;
+    padding-bottom:10px;margin-bottom:16px;border-bottom:1px solid rgba(34,48,66,0.85);
+}}
+/* Tighter section title inside main index rails (curve / right stack) */
+.shdr.oriel-rail-shdr{{
+    margin-top:0!important;margin-bottom:8px!important;padding-bottom:6px!important;
+}}
+
+/* ── Dark surface card ── */
+.dcard{{
+    background:{BG_SURFACE};border:1px solid rgba(34,48,66,0.88);border-radius:{RADIUS_LG}px;
+    padding:18px 20px;margin-bottom:14px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.22);
+}}
+.dcard-elevated{{
+    background:{BG_ELEVATED};border:1px solid rgba(44,59,77,0.9);border-radius:{RADIUS_LG}px;
+    padding:18px 20px;margin-bottom:14px;
+    box-shadow:0 12px 36px rgba(0,0,0,0.3);
+}}
+
+/* ── Index Print ── */
+.ip-wrap{{
+    background:{BG_SURFACE};border:1px solid rgba(34,48,66,0.9);border-top:2px solid rgba(212,168,90,0.28);border-radius:{RADIUS_LG}px;overflow:hidden;margin-bottom:14px;
+    box-shadow:0 8px 28px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.035);
+    transition:transform 0.3s ease,box-shadow 0.3s ease,border-color 0.3s ease;
+}}
+.ip-wrap:hover{{
+    transform:translateY(-1px);
+    border-color:rgba(212,168,90,0.3);border-top-color:rgba(212,168,90,0.5);
+    box-shadow:0 12px 36px rgba(0,0,0,0.34),0 0 0 1px rgba(212,168,90,0.06),0 0 24px rgba(212,168,90,0.06),inset 0 1px 0 rgba(255,255,255,0.045);
+}}
+.ip-header{{background:{BG_ELEVATED};padding:8px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid {BORDER};}}
+.ip-header-label{{font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;color:{TEXT_MUTED};font-weight:400;}}
+.ip-header-status{{font-size:0.66rem;font-weight:400;color:{POSITIVE};}}
+.ip-highlight{{background:linear-gradient(135deg,{BG_ELEVATED} 0%,{BG_SURFACE2} 100%);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid {BORDER};}}
+.ip-hl-label{{font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:{GOLD};font-weight:400;}}
+.ip-hl-value{{font-family:'DM Mono',monospace;font-size:1.5rem;font-weight:400;color:{TEXT_PRI};letter-spacing:-0.03em;font-variant-numeric:tabular-nums;}}
+.ip-body{{padding:0 16px;}}
+.ip-row{{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(34,48,66,0.6);}}
+.ip-row:last-child{{border-bottom:none;}}
+.ip-key{{font-size:0.73rem;color:{TEXT_SEC};}}
+.ip-val{{font-family:'DM Mono',monospace;font-size:0.75rem;color:{TEXT_PRI};font-weight:400;font-variant-numeric:tabular-nums;}}
+
+/* ── Steps ── */
+.steps-row{{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px;}}
+.step-card{{
+    background:{BG_SURFACE2};border:1px solid rgba(34,48,66,0.88);border-top:1px solid rgba(212,168,90,0.12);border-radius:{RADIUS_MD}px;padding:16px 18px;
+    transition:border-color 0.2s,box-shadow 0.2s,transform 0.2s;
+}}
+.step-card:hover{{
+    border-color:rgba(212,168,90,0.22);border-top-color:rgba(212,168,90,0.38);
+    box-shadow:0 4px 20px rgba(0,0,0,0.22),0 0 16px rgba(212,168,90,0.04);
+}}
+.step-head{{display:flex;align-items:center;gap:8px;margin-bottom:5px;}}
+.step-num{{flex-shrink:0;width:22px;height:22px;background:rgba(212,168,90,0.1);color:{GOLD};border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.58rem;font-weight:500;border:1px solid rgba(212,168,90,0.35);box-shadow:0 0 8px rgba(212,168,90,0.1);}}
+.step-title{{font-size:0.71rem;font-weight:400;color:{TEXT_PRI};line-height:1.3;}}
+.step-body{{font-size:0.67rem;color:{TEXT_SEC};line-height:1.5;padding-left:30px;}}
+
+/* ── Stat mini cards ── */
+.stat-mini{{
+    background:{BG_ELEVATED};
+    border:1px solid rgba(34,48,66,0.88);
+    border-left:2px solid rgba(212,168,90,0.35);
+    border-radius:{RADIUS_MD}px;padding:12px 14px;
+    transition:border-color 0.2s,box-shadow 0.2s;margin-bottom:8px;
+    position:relative;
+}}
+.stat-mini:hover{{
+    border-color:rgba(212,168,90,0.4);border-left-color:rgba(212,168,90,0.7);
+    box-shadow:0 2px 10px rgba(0,0,0,0.22);
+}}
+.stat-mini-label{{font-size:0.55rem;letter-spacing:0.13em;text-transform:uppercase;color:{TEXT_SEC};font-weight:500;margin-bottom:4px;}}
+.stat-mini-value{{font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:400;color:{TEXT_PRI};font-variant-numeric:tabular-nums;letter-spacing:-0.02em;}}
+
+/* ── st.dataframe (Glide) — frame; scrollbars only when inner grid overflows ── */
+[data-testid="stDataFrame"]{{
+    border:1px solid rgba(34,48,66,0.88)!important;border-radius:{RADIUS_MD}px!important;
+    overflow:auto!important;
+    box-shadow:0 4px 20px rgba(0,0,0,0.38)!important;
+    background:{BG_SURFACE}!important;
+}}
+[data-testid="stDataFrame"] > div,
+[data-testid="stDataFrame"] [class*="stElementToolbar"]{{
+    background:transparent!important;
+}}
+[data-testid="stDataFrame"] [class*="stElementToolbar"] button{{
+    opacity:0.85;
+}}
+/* Glide scroll viewport lives inside; thin dark bars, Firefox */
+[data-testid="stDataFrame"] *{{
+    scrollbar-width:thin;
+    scrollbar-color:var(--oriel-scroll-thumb) var(--oriel-scroll-track);
+}}
+[data-testid="stDataFrame"] *::-webkit-scrollbar{{
+    width:var(--oriel-scroll-size)!important;height:var(--oriel-scroll-size)!important;
+}}
+[data-testid="stDataFrame"] *::-webkit-scrollbar-thumb{{
+    background:var(--oriel-scroll-thumb)!important;border-radius:4px!important;
+    border:1px solid var(--oriel-scroll-border)!important;
+}}
+[data-testid="stDataFrame"] *::-webkit-scrollbar-thumb:hover{{
+    background:var(--oriel-scroll-thumb-hover)!important;
+}}
+[data-testid="stDataFrame"] *::-webkit-scrollbar-track{{
+    background:var(--oriel-scroll-track)!important;
+}}
+[data-testid="stDataFrame"] *::-webkit-scrollbar-corner{{
+    background:var(--oriel-scroll-track)!important;
+}}
+
+/* ── Publish Gate scrollable container ── */
+[data-testid="stVerticalBlockBorderWrapper"]:has(>[class*="gate_scroll"]){{
+    scrollbar-width:thin!important;
+    scrollbar-color:{GOLD} {BG_ELEVATED}!important;
+}}
+[data-testid="stVerticalBlockBorderWrapper"]:has(>[class*="gate_scroll"])::-webkit-scrollbar{{
+    width:6px!important;
+}}
+[data-testid="stVerticalBlockBorderWrapper"]:has(>[class*="gate_scroll"])::-webkit-scrollbar-thumb{{
+    background:{GOLD}!important;border-radius:3px!important;
+}}
+[data-testid="stVerticalBlockBorderWrapper"]:has(>[class*="gate_scroll"])::-webkit-scrollbar-track{{
+    background:{BG_ELEVATED}!important;
+}}
+
+/* Tighten vertical gap: stats row sits under charts (same 2|1 grid) */
+.oriel-stat-row-start{{
+    margin-top:0!important;margin-bottom:0!important;height:0!important;
+    line-height:0!important;overflow:visible!important;
+}}
+
+/* ── Plotly: premium frame; outer never scrolls (no stray bars on line/bar charts) ── */
+[data-testid="stPlotlyChart"]{{
+    overflow:hidden!important;
+    margin-bottom:4px!important;
+    border-radius:{RADIUS_MD}px!important;
+    background:linear-gradient(165deg,rgba(22,31,43,0.55) 0%,rgba(11,15,20,0.2) 45%,transparent 100%),{BG_SURFACE}!important;
+    border:1px solid rgba(34,48,66,0.75)!important;
+    box-shadow:
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 10px 40px rgba(0,0,0,0.32),
+        inset 0 1px 0 rgba(255,255,255,0.045)!important;
+    transition:box-shadow 0.35s ease,border-color 0.35s ease,transform 0.35s ease;
+    scrollbar-width:none;
+}}
+[data-testid="stPlotlyChart"]::-webkit-scrollbar{{
+    width:0!important;height:0!important;display:none!important;
+}}
+[data-testid="stPlotlyChart"]:hover{{
+    border-color:rgba(212,168,90,0.2)!important;
+    box-shadow:
+        0 0 0 1px rgba(212,168,90,0.06),
+        0 14px 48px rgba(0,0,0,0.38),
+        0 0 48px rgba(212,168,90,0.04),
+        inset 0 1px 0 rgba(255,255,255,0.06)!important;
+}}
+/* Desk Plotly tables: Streamlit caps height → scroll on wrapper div; match table scrollbar style only there */
+[data-testid="stPlotlyChart"] > div{{
+    overflow-x:hidden!important;overflow-y:auto!important;
+    scrollbar-width:thin;
+    scrollbar-color:var(--oriel-scroll-thumb) var(--oriel-scroll-track);
+}}
+[data-testid="stPlotlyChart"] > div::-webkit-scrollbar{{
+    width:var(--oriel-scroll-size)!important;height:var(--oriel-scroll-size)!important;
+}}
+[data-testid="stPlotlyChart"] > div::-webkit-scrollbar-thumb{{
+    background:var(--oriel-scroll-thumb)!important;border-radius:4px!important;
+    border:1px solid var(--oriel-scroll-border)!important;
+}}
+[data-testid="stPlotlyChart"] > div::-webkit-scrollbar-thumb:hover{{
+    background:var(--oriel-scroll-thumb-hover)!important;
+}}
+[data-testid="stPlotlyChart"] > div::-webkit-scrollbar-track{{
+    background:var(--oriel-scroll-track)!important;
+}}
+[data-testid="stPlotlyChart"] > div::-webkit-scrollbar-corner{{
+    background:var(--oriel-scroll-track)!important;
+}}
+/* Live-feed table: override global overflow:hidden so the chart box scrolls vertically */
+.st-key-tbl_meta_cpi [data-testid="stPlotlyChart"]{{
+  height:{CSS_TBL_6ROW_13}px!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:var(--oriel-scroll-thumb) var(--oriel-scroll-track)!important;
+}}
+.st-key-tbl_meta_cpi [data-testid="stPlotlyChart"]::-webkit-scrollbar{{
+  width:4px!important;height:0!important;display:block!important;
+}}
+.st-key-tbl_meta_cpi [data-testid="stPlotlyChart"]::-webkit-scrollbar-thumb{{
+  background:var(--oriel-scroll-thumb)!important;border-radius:4px!important;
+}}
+.st-key-tbl_meta_cpi [data-testid="stPlotlyChart"]::-webkit-scrollbar-track{{
+  background:var(--oriel-scroll-track)!important;
+}}
+/* Bottom data tabs — only target INNER nested tab panels (not the outer HC/CPI main panels).
+   Using descendant stTabs selector ensures we only match the data sub-tabs. */
+[data-testid="stTabs"] [data-testid="stTabs"]:has(.st-key-tbl_curve_hc) [data-baseweb="tab-panel"],
+[data-testid="stTabs"] [data-testid="stTabs"]:has(.st-key-tbl_curve_cpi) [data-baseweb="tab-panel"]{{
+  min-height:{CSS_TBL_3ROW_108}px;
+  padding-left:4px!important;padding-right:4px!important;
+}}
+/* Data tab header containers — no forced height; CSV position is controlled by vertical_alignment on columns */
+/* Compact "Show index levels" checkbox — targets by tab key inside left column */
+.st-key-idx_hc .stCheckbox,.st-key-idx_cpi .stCheckbox{{
+  transform:scale(0.88);transform-origin:left center;margin:0!important;
+}}
+.st-key-idx_hc [data-testid="stElementContainer"]:has(.stCheckbox),
+.st-key-idx_cpi [data-testid="stElementContainer"]:has(.stCheckbox){{
+  padding-top:0!important;padding-bottom:0!important;margin-top:0!important;margin-bottom:0!important;
+}}
+/* Curve + Constituents — natural height, headers always visible */
+.st-key-tbl_curve_hc [data-testid="stPlotlyChart"],
+.st-key-tbl_curve_cpi [data-testid="stPlotlyChart"],
+.st-key-tbl_constituents_hc [data-testid="stPlotlyChart"],
+.st-key-tbl_constituents_cpi [data-testid="stPlotlyChart"]{{
+  overflow-x:hidden!important;
+}}
+/* Contract Observations — fixed 6-row viewport with visible scrollbar */
+.st-key-tbl_contracts_hc [data-testid="stPlotlyChart"],
+.st-key-tbl_contracts_cpi [data-testid="stPlotlyChart"]{{
+  height:{CSS_TBL_6ROW}px!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:var(--oriel-scroll-thumb) var(--oriel-scroll-track)!important;
+}}
+.st-key-tbl_contracts_hc [data-testid="stPlotlyChart"]::-webkit-scrollbar,
+.st-key-tbl_contracts_cpi [data-testid="stPlotlyChart"]::-webkit-scrollbar{{
+  width:4px!important;height:0!important;display:block!important;
+}}
+.st-key-tbl_contracts_hc [data-testid="stPlotlyChart"]::-webkit-scrollbar-thumb,
+.st-key-tbl_contracts_cpi [data-testid="stPlotlyChart"]::-webkit-scrollbar-thumb{{
+  background:var(--oriel-scroll-thumb)!important;border-radius:4px!important;
+}}
+.st-key-tbl_contracts_hc [data-testid="stPlotlyChart"]::-webkit-scrollbar-track,
+.st-key-tbl_contracts_cpi [data-testid="stPlotlyChart"]::-webkit-scrollbar-track{{
+  background:var(--oriel-scroll-track)!important;
+}}
+/* Index Administrator scrollable table containers — visible thin scrollbar */
+.st-key-scroll_def_bkt,
+.st-key-scroll_inp_tbl,
+.st-key-scroll_calc_tbl,
+.st-key-scroll_pub_tbl,
+.st-key-scroll_audit_runs,
+.st-key-scroll_audit_fb{{
+  scrollbar-width:thin!important;
+  scrollbar-color:var(--oriel-scroll-thumb) var(--oriel-scroll-track)!important;
+}}
+.st-key-scroll_def_bkt::-webkit-scrollbar,
+.st-key-scroll_inp_tbl::-webkit-scrollbar,
+.st-key-scroll_calc_tbl::-webkit-scrollbar,
+.st-key-scroll_pub_tbl::-webkit-scrollbar,
+.st-key-scroll_audit_runs::-webkit-scrollbar,
+.st-key-scroll_audit_fb::-webkit-scrollbar{{
+  width:6px!important;height:0!important;display:block!important;
+}}
+.st-key-scroll_def_bkt::-webkit-scrollbar-thumb,
+.st-key-scroll_inp_tbl::-webkit-scrollbar-thumb,
+.st-key-scroll_calc_tbl::-webkit-scrollbar-thumb,
+.st-key-scroll_pub_tbl::-webkit-scrollbar-thumb,
+.st-key-scroll_audit_runs::-webkit-scrollbar-thumb,
+.st-key-scroll_audit_fb::-webkit-scrollbar-thumb{{
+  background:var(--oriel-scroll-thumb)!important;border-radius:4px!important;
+}}
+.st-key-scroll_def_bkt::-webkit-scrollbar-track,
+.st-key-scroll_inp_tbl::-webkit-scrollbar-track,
+.st-key-scroll_calc_tbl::-webkit-scrollbar-track,
+.st-key-scroll_pub_tbl::-webkit-scrollbar-track,
+.st-key-scroll_audit_runs::-webkit-scrollbar-track,
+.st-key-scroll_audit_fb::-webkit-scrollbar-track{{
+  background:var(--oriel-scroll-track)!important;
+}}
+/* Legacy HTML table fallback (rare) */
+[data-testid="stDataFrame"] th{{
+    background:{TABLE_HEADER_BG}!important;font-size:0.62rem!important;
+    letter-spacing:0.1em!important;text-transform:uppercase!important;
+    color:{TEXT_SEC}!important;font-weight:400!important;
+    border-bottom:1px solid rgba(34,48,66,0.75)!important;padding:10px 12px!important;
+    text-align:right!important;
+}}
+[data-testid="stDataFrame"] th:first-child{{text-align:left!important;}}
+[data-testid="stDataFrame"] td{{
+    font-family:'DM Mono',monospace!important;font-size:0.7rem!important;font-weight:400!important;
+    padding:7px 10px!important;color:{TEXT_PRI}!important;
+    text-align:right!important;font-variant-numeric:tabular-nums!important;
+    border-bottom:1px solid rgba(34,48,66,0.35)!important;
+}}
+[data-testid="stDataFrame"] td:first-child{{text-align:left!important;}}
+[data-testid="stDataFrame"] tr:nth-child(odd) td{{background:{TABLE_STRIPE_A}!important;}}
+[data-testid="stDataFrame"] tr:nth-child(even) td{{background:{TABLE_STRIPE_B}!important;}}
+[data-testid="stDataFrame"] tr:hover td{{background:{BG_HOVER}!important;}}
+/* Glide grid (modern st.dataframe): smaller body + regular weight */
+[data-testid="stDataFrame"] [role="gridcell"]{{
+    font-size:0.7rem!important;font-weight:400!important;
+}}
+[data-testid="stDataFrame"] [role="columnheader"]{{
+    font-size:0.62rem!important;font-weight:400!important;
+}}
+/* st.table (HTML) fallback — same thin dark scrollbars when table overflows container */
+[data-testid="stTable"]{{
+    overflow:auto!important;
+    border-radius:{RADIUS_MD}px!important;
+    border:1px solid rgba(34,48,66,0.88)!important;
+    background:{BG_SURFACE}!important;
+    box-shadow:0 4px 18px rgba(0,0,0,0.28)!important;
+}}
+[data-testid="stTable"] *{{
+    scrollbar-width:thin;
+    scrollbar-color:var(--oriel-scroll-thumb) var(--oriel-scroll-track);
+}}
+[data-testid="stTable"] *::-webkit-scrollbar{{
+    width:var(--oriel-scroll-size)!important;height:var(--oriel-scroll-size)!important;
+}}
+[data-testid="stTable"] *::-webkit-scrollbar-thumb{{
+    background:var(--oriel-scroll-thumb)!important;border-radius:4px!important;
+    border:1px solid var(--oriel-scroll-border)!important;
+}}
+[data-testid="stTable"] *::-webkit-scrollbar-thumb:hover{{
+    background:var(--oriel-scroll-thumb-hover)!important;
+}}
+[data-testid="stTable"] *::-webkit-scrollbar-track{{
+    background:var(--oriel-scroll-track)!important;
+}}
+[data-testid="stTable"] table{{
+    width:100%;border-collapse:separate;border-spacing:0;border:none;
+    border-radius:{RADIUS_MD}px;overflow:hidden;background:{BG_SURFACE};
+}}
+[data-testid="stTable"] th{{
+    background:{TABLE_HEADER_BG}!important;color:{TEXT_SEC}!important;
+    font-size:0.62rem!important;text-transform:uppercase;letter-spacing:0.1em;
+    padding:8px 12px!important;border-bottom:1px solid rgba(34,48,66,0.75)!important;
+    text-align:right!important;font-weight:400!important;
+}}
+[data-testid="stTable"] th:first-child{{text-align:left!important;}}
+[data-testid="stTable"] td{{
+    font-family:'DM Mono',monospace!important;font-size:0.7rem!important;font-weight:400!important;
+    color:{TEXT_PRI}!important;padding:7px 12px!important;
+    text-align:right!important;font-variant-numeric:tabular-nums!important;
+    border-bottom:1px solid rgba(34,48,66,0.5)!important;
+}}
+[data-testid="stTable"] td:first-child{{text-align:left!important;}}
+[data-testid="stTable"] tr:nth-child(odd) td{{background:{TABLE_STRIPE_A}!important;}}
+[data-testid="stTable"] tr:nth-child(even) td{{background:{TABLE_STRIPE_B}!important;}}
+[data-testid="stTable"] tr:hover td{{background:{BG_HOVER}!important;}}
+
+/* ── Download CSV — thin tertiary outline ── */
+[data-testid="stDownloadButton"] button{{
+    background:{BG_SURFACE2}!important;color:{TEXT_SEC}!important;
+    border:1px solid {BORDER_STR}!important;border-radius:{RADIUS_SM}px!important;
+    font-size:0.68rem!important;font-weight:400!important;
+    letter-spacing:0.04em!important;padding:3px 11px!important;
+    min-height:0!important;line-height:1.25!important;
+    transition:border-color 0.15s,color 0.15s,background 0.15s!important;
+    box-shadow:none!important;
+}}
+[data-testid="stDownloadButton"] button:hover{{
+    background:{BG_ELEVATED}!important;color:{GOLD}!important;
+    border-color:rgba(212,168,90,0.65)!important;
+    box-shadow:0 0 8px rgba(212,168,90,0.08)!important;
+}}
+[data-testid="stDownloadButton"] button:focus-visible{{
+    border-color:rgba(212,168,90,0.55)!important;
+    outline:none!important;
+}}
+
+/* ── Widget labels (checkbox, radio, toggle, select, date — shared Streamlit label) ── */
+[data-testid="stWidgetLabel"] p,
+[data-testid="stWidgetLabel"] label,
+[data-testid="stWidgetLabel"] span,
+[data-testid="stWidgetLabel"]{{
+    color:{TEXT_PRI}!important;opacity:1!important;
+}}
+
+/* ── Checkbox — visible box + checkmark on dark (exclude st.toggle: same stCheckbox + baseweb label uses div+input, not span box) ── */
+[data-testid="stCheckbox"] label,
+[data-testid="stCheckbox"] label p,
+[data-testid="stCheckbox"] label span{{
+    color:{TEXT_PRI}!important;font-size:0.78rem!important;
+}}
+[data-testid="stCheckbox"] [data-baseweb="checkbox"]:not(:has(> div + input[type="checkbox"]))){{
+    border:2px solid rgba(230,237,243,0.45)!important;
+    background:{BG_SURFACE2}!important;
+}}
+[data-testid="stCheckbox"] [data-baseweb="checkbox"][aria-checked="true"]:not(:has(> div + input[type="checkbox"]))){{
+    background:rgba(212,168,90,0.25)!important;border-color:{GOLD}!important;
+}}
+[data-testid="stCheckbox"] div[role="checkbox"]:not([data-baseweb]){{
+    border:2px solid rgba(230,237,243,0.45)!important;
+    background:{BG_SURFACE2}!important;
+}}
+[data-testid="stCheckbox"] svg{{
+    fill:{GOLD}!important;color:{GOLD}!important;opacity:1!important;
+}}
+
+/* ── Radio — dark ring only; no light/white border or focus halo ── */
+[data-testid="stRadio"]{{
+    border:none!important;outline:none!important;box-shadow:none!important;
+}}
+[data-testid="stRadio"] [data-baseweb="radio-group"],
+[data-testid="stRadio"] div[role="radiogroup"]{{
+    border:none!important;outline:none!important;box-shadow:none!important;
+}}
+[data-testid="stRadio"] label,
+[data-testid="stRadio"] div[role="radiogroup"] label,
+[data-testid="stRadio"] div[role="radiogroup"] p,
+[data-testid="stRadio"] p{{
+    color:{TEXT_PRI}!important;font-size:0.78rem!important;
+}}
+[data-testid="stRadio"] [data-baseweb="radio"],
+[data-testid="stRadio"] div[role="radio"]{{
+    border:1px solid {BORDER_STR}!important;background:{BG_SURFACE2}!important;
+    outline:none!important;box-shadow:none!important;
+}}
+[data-testid="stRadio"] [data-baseweb="radio"]:focus,
+[data-testid="stRadio"] [data-baseweb="radio"]:focus-visible,
+[data-testid="stRadio"] div[role="radio"]:focus,
+[data-testid="stRadio"] div[role="radio"]:focus-visible{{
+    outline:none!important;box-shadow:none!important;
+}}
+[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"],
+[data-testid="stRadio"] div[role="radio"][aria-checked="true"]{{
+    border-color:{GOLD}!important;
+}}
+[data-testid="stRadio"] input[type="radio"]{{
+    accent-color:{GOLD};
+    outline:none!important;box-shadow:none!important;
+}}
+
+/* ── st.toggle only (not st.checkbox): label > div (track) + input + label; checkbox uses span + input. */
+[data-testid="stCheckbox"].row-widget:has(label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"])){{
+    border:none!important;outline:none!important;box-shadow:none!important;background:transparent!important;
+}}
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]){{
+    background:transparent!important;
+}}
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]):focus,
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]):focus-visible,
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]):focus-within{{
+    background:transparent!important;outline:none!important;box-shadow:none!important;
+}}
+/* Drop focus/hover halos on track + thumb only (not the help icon circle) */
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]) > div:first-of-type,
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]) > div:first-of-type *{{
+    box-shadow:none!important;filter:none!important;
+}}
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]) input[type="checkbox"]{{
+    outline:none!important;box-shadow:none!important;
+}}
+/* Unchecked track: soften borderColor-as-fill. Checked: keep theme primary (do not !important over primary). */
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]:not(:checked)) > div:first-of-type{{
+    background-color:{BG_SURFACE2}!important;
+}}
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]:checked) > div:first-of-type{{
+    background-color:{GOLD}!important;
+}}
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]) [data-testid="stWidgetLabel"] p,
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]) [data-testid="stWidgetLabel"] span,
+[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"]) [data-testid="stWidgetLabel"]{{
+    color:{TEXT_PRI}!important;font-size:0.75rem!important;white-space:nowrap;
+}}
+[data-testid="stElementContainer"]:has([data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"])),
+[data-testid="stElementContainer"]:has([data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"])):focus-within{{
+    border:none!important;outline:none!important;box-shadow:none!important;background:transparent!important;
+}}
+[data-testid="stHorizontalBlock"]:has([data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"])){{
+    border:none!important;outline:none!important;box-shadow:none!important;background:transparent!important;
+}}
+[data-testid="stHorizontalBlock"]:has([data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(> div + input[type="checkbox"])) [data-testid="stColumn"]{{
+    border:none!important;outline:none!important;box-shadow:none!important;background:transparent!important;
+}}
+
+/* ── Date input ── */
+[data-testid="stDateInput"] label p{{color:{TEXT_PRI}!important;}}
+[data-testid="stDateInput"] input{{
+    background:{BG_SURFACE2}!important;border-color:{BORDER}!important;
+    color:{TEXT_PRI}!important;border-radius:{RADIUS_SM}px!important;
+    font-family:'DM Mono',monospace!important;font-size:0.76rem!important;
+    transition:border-color 0.15s,box-shadow 0.15s!important;
+}}
+[data-testid="stDateInput"] input:focus-visible{{
+    border-color:rgba(212,168,90,0.45)!important;
+    box-shadow:0 0 0 2px rgba(212,168,90,0.12)!important;outline:none!important;
+}}
+
+/* ── Select / multiselect (if used) ── */
+[data-testid="stSelectbox"] label p,
+[data-testid="stMultiSelect"] label p{{color:{TEXT_PRI}!important;}}
+[data-testid="stSelectbox"] [data-baseweb="select"] > div,
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div{{
+    background-color:{BG_SURFACE2}!important;border-color:{BORDER}!important;color:{TEXT_PRI}!important;
+    border-radius:{RADIUS_SM}px!important;
+    transition:border-color 0.15s,box-shadow 0.15s!important;
+}}
+[data-testid="stSelectbox"]:focus-within [data-baseweb="select"] > div,
+[data-testid="stMultiSelect"]:focus-within [data-baseweb="select"] > div{{
+    border-color:rgba(212,168,90,0.4)!important;
+    box-shadow:0 0 0 2px rgba(212,168,90,0.1)!important;
+}}
+
+/* ── Expander ── */
+[data-testid="stExpander"]{{border:1px solid {BORDER}!important;border-radius:{RADIUS_MD}px!important;background:{BG_SURFACE}!important;}}
+[data-testid="stExpander"] summary{{font-size:0.74rem!important;font-weight:400!important;color:{TEXT_SEC}!important;padding:12px 16px!important;}}
+
+/* ── Parity tab: no extra bottom gap on benchmark tab strip ── */
+.st-key-parity_ctrl {{margin-bottom:4px;}}
+
+/* ── Note / Phase II ── */
+.note-box{{
+    background:linear-gradient(135deg,{BG_SURFACE2} 0%,rgba(18,24,33,0.92) 100%);
+    border:1px solid rgba(34,48,66,0.9);border-left:3px solid {GOLD};border-radius:{RADIUS_MD}px;
+    padding:15px 18px;font-size:0.74rem;color:{TEXT_SEC};line-height:1.65;
+    box-shadow:0 6px 24px rgba(0,0,0,0.22),inset 0 1px 0 rgba(255,255,255,0.03);
+}}
+.note-box code{{background:{BG_ELEVATED};padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:0.68rem;color:{GOLD};}}
+.p2-wrap{{
+    background:{BG_SURFACE};border:1px solid rgba(34,48,66,0.9);border-radius:{RADIUS_MD}px;padding:6px 20px 8px;
+    box-shadow:0 6px 22px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.03);
+}}
+.p2-item{{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid {BORDER};font-size:0.73rem;color:{TEXT_SEC};line-height:1.55;}}
+.p2-item:last-child{{border-bottom:none;}}
+.p2-item b,.p2-item strong{{color:{TEXT_PRI};font-weight:400;}}
+.p2-item code{{color:{GOLD};font-size:0.68rem;font-family:'DM Mono',monospace;}}
+
+/* ── Dislocation panel ── */
+.dislo-wrap{{
+    background:{BG_SURFACE};border:1px solid rgba(34,48,66,0.9);border-radius:{RADIUS_LG}px;overflow:hidden;margin-bottom:14px;
+    box-shadow:0 8px 28px rgba(0,0,0,0.26),inset 0 1px 0 rgba(255,255,255,0.03);
+    transition:box-shadow 0.3s ease,border-color 0.3s ease;
+}}
+.dislo-wrap:hover{{
+    border-color:rgba(212,168,90,0.22);
+    box-shadow:0 10px 32px rgba(0,0,0,0.32),0 0 20px rgba(212,168,90,0.05),inset 0 1px 0 rgba(255,255,255,0.04);
+}}
+.dislo-header{{background:{BG_ELEVATED};padding:8px 16px;border-bottom:1px solid {BORDER};}}
+.dislo-title{{font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;color:{TEXT_MUTED};font-weight:400;}}
+.dislo-row{{display:grid;grid-template-columns:1fr 1fr 1fr;padding:7px 16px;border-bottom:1px solid rgba(34,48,66,0.5);}}
+.dislo-row:last-child{{border-bottom:none;}}
+.dislo-row:hover{{background:{BG_HOVER};}}
+.dislo-metric{{font-size:0.71rem;color:{TEXT_SEC};}}
+.dislo-val{{font-family:'DM Mono',monospace;font-size:0.75rem;color:{TEXT_PRI};font-weight:400;text-align:right;font-variant-numeric:tabular-nums;}}
+.dislo-signal{{font-size:0.75rem;font-weight:400;text-align:right;}}
+
+/* ── Version chip ── */
+.version-chip{{display:inline-block;background:{BG_ELEVATED};border:1px solid {BORDER_STR};color:{TEXT_SEC};font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:500;padding:3px 9px;border-radius:999px;margin-left:10px;vertical-align:middle;}}
+
+/* ── Sidebar ── */
+[data-testid="stSidebar"]{{background:{BG_SURFACE}!important;border-right:1px solid {BORDER}!important;}}
+
+/* ── HR ── */
+.oriel-hr{{
+    border:none;height:1px;margin:14px 0;
+    background:linear-gradient(90deg,transparent 0%,{BORDER} 12%,{BORDER} 88%,transparent 100%);
+    opacity:0.95;
+}}
+.oriel-hr-tight{{margin:12px 0 14px!important;}}
+
+/* Streamlit columns: top-align so shorter rail does not leave a stretched dead zone */
+div[data-testid="stHorizontalBlock"]{{
+    align-items:flex-start!important;
+}}
+/* Main curve | Index Print row: equal column box height */
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right){{
+    align-items:stretch!important;
+}}
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) > [data-testid="stColumn"]{{
+    align-self:stretch!important;
+}}
+/* Split markers: keep in DOM for :has() row rules but take no layout space */
+span.oriel-main-split-left,span.oriel-main-split-right{{
+    position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:0!important;
+    overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;
+}}
+[data-testid="stElementContainer"]:has(.oriel-main-split-left),
+[data-testid="stElementContainer"]:has(.oriel-main-split-right){{
+    position:relative!important;margin:0!important;padding:0!important;height:0!important;min-height:0!important;
+}}
+/* Main index row: slightly tighter gutter between curve and Index Print */
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right){{
+    gap:1.25rem!important;
+}}
+/* Left rail frame */
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-left) > [data-testid="stVerticalBlock"],
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-left) > div > [data-testid="stVerticalBlock"]{{
+    background:{BG_SURFACE}!important;
+    border:1px solid rgba(34,48,66,0.9)!important;
+    border-radius:{RADIUS_LG}px!important;
+    box-shadow:0 8px 28px rgba(0,0,0,0.26),inset 0 1px 0 rgba(255,255,255,0.03)!important;
+    padding:1px 12px 10px!important;
+    box-sizing:border-box!important;
+}}
+/* Right rail frame — no padding, panels go edge-to-edge, top-aligned with left */
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) > [data-testid="stVerticalBlock"],
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) > div > [data-testid="stVerticalBlock"]{{
+    background:transparent!important;
+    border:none!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+    gap:0!important;
+}}
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-left) [data-testid="stPlotlyChart"]{{
+    margin-bottom:0!important;
+}}
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-left) [data-testid="stCaption"]{{
+    margin-top:-2px!important;margin-bottom:2px!important;font-size:0.50rem!important;
+}}
+/* Right rail: flex layout so panels fill available height */
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) > [data-testid="stVerticalBlock"],
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) > div > [data-testid="stVerticalBlock"]{{
+    display:flex!important;flex-direction:column!important;
+}}
+/* The stElementContainer holding dislo-wrap must grow to fill remaining space */
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) [data-testid="stElementContainer"]:has(.dislo-wrap){{
+    flex:1!important;display:flex!important;flex-direction:column!important;
+}}
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) .dislo-wrap{{
+    flex:1!important;display:flex!important;flex-direction:column!important;
+}}
+/* Dislo rows fill the panel evenly */
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) .dislo-wrap .dislo-row{{
+    flex:1!important;
+}}
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) [data-testid="stElementContainer"]:has(.ip-wrap){{
+    margin-bottom:12px!important;
+}}
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) .ip-wrap{{
+    margin-bottom:12px!important;
+    border:1px solid rgba(34,48,66,0.9)!important;
+    border-radius:{RADIUS_LG}px!important;
+    box-shadow:0 6px 20px rgba(0,0,0,0.22)!important;
+}}
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) .ip-wrap:hover{{
+    transform:none!important;
+    border-color:rgba(212,168,90,0.2)!important;
+    box-shadow:0 4px 16px rgba(0,0,0,0.28)!important;
+}}
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) .dislo-wrap{{
+    margin-bottom:0!important;
+    border:1px solid rgba(34,48,66,0.9)!important;
+    border-radius:{RADIUS_LG}px!important;
+    box-shadow:0 6px 20px rgba(0,0,0,0.22)!important;
+}}
+div[data-testid="stHorizontalBlock"]:has(.oriel-main-split-left):has(.oriel-main-split-right) [data-testid="stColumn"]:has(.oriel-main-split-right) .dislo-wrap:hover{{
+    box-shadow:0 4px 16px rgba(0,0,0,0.28)!important;
+}}
+
+/* ── Warning (live feed failure) ── */
+[data-testid="stAlert"]{{
+    background:{BG_SURFACE2}!important;border:1px solid rgba(245,158,11,0.35)!important;
+    border-left:3px solid {WARNING}!important;border-radius:{RADIUS_MD}px!important;
+    color:{TEXT_PRI}!important;box-shadow:0 4px 16px rgba(0,0,0,0.2)!important;
+}}

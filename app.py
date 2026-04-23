@@ -13,18 +13,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Hide Streamlit chrome
-st.markdown("""
-<style>
-#MainMenu, footer, header { visibility: hidden; }
-</style>
-""", unsafe_allow_html=True)
+from ui.css import inject_css
+inject_css()
 
 from falconx_sim_tab import render_falconx_sim_tab
 
+st.markdown("""
+<div class='oriel-page-head'>
+  <span class='oriel-page-title'>Oriel Market Simulation</span>
+  <span class='version-chip'>CPI Curve & Perp Pilot</span>
+  <span class='version-chip' style='background:#1b2a3e;color:#7aa2f7;border-color:#2e4a72;'>FalconX</span>
+</div>""", unsafe_allow_html=True)
+
 st.markdown(
-    "<h2 style='margin-bottom:2px;'>Oriel Market Simulation</h2>"
-    "<p style='color:#6b7f94;font-size:0.85rem;margin-top:0;'>CPI Curve & Perp Pilot \u00b7 FalconX Discussion Layer</p>",
+    "<div style='font-size:0.75rem;color:#6b7f94;margin:4px 0 10px;'>"
+    "Simulation + demo layer for Hyperliquid CPI perp listing. Live venue ingestion, dislocation analytics, backtest engine.</div>",
     unsafe_allow_html=True,
 )
 
