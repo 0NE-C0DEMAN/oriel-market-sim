@@ -1,0 +1,13 @@
+target_month,days_from_valuation,constituent_id,contract_family,weight,eligible,expected_yoy_pct,index_level,std_dev_pct
+2026-04-01,0,KALSHI_binary_threshold_202604,binary_threshold,0.65,True,0.85,100.03,0.16
+2026-04-01,0,KALSHI_exact_outcome_202604,exact_outcome,0.35,True,0.84,100.015,0.17
+2026-05-01,30,KALSHI_binary_threshold_202605,binary_threshold,0.65,True,0.66,99.75,0.21
+2026-05-01,30,KALSHI_exact_outcome_202605,exact_outcome,0.35,True,0.65,99.735,0.22
+2026-06-01,61,KALSHI_binary_threshold_202606,binary_threshold,0.65,True,0.51,99.48,0.24
+2026-06-01,61,KALSHI_exact_outcome_202606,exact_outcome,0.35,True,0.51,99.48,0.25
+2026-07-01,91,KALSHI_binary_threshold_202607,binary_threshold,0.65,True,0.39,99.31,0.28
+2026-07-01,91,KALSHI_exact_outcome_202607,exact_outcome,0.35,True,0.39,99.31,0.29
+2026-08-01,122,KALSHI_binary_threshold_202608,binary_threshold,0.65,True,0.23,99.03,0.31
+2026-08-01,122,KALSHI_exact_outcome_202608,exact_outcome,0.35,True,0.235,99.04,0.32
+2026-09-01,153,KALSHI_binary_threshold_202609,binary_threshold,0.65,True,0.26,99.07,0.34
+2026-09-01,153,KALSHI_exact_outcome_202609,exact_outcome,0.35,True,0.265,99.08,0.35

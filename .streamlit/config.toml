@@ -1,0 +1,27 @@
+# Oriel dark institutional theme — must match app.py tokens.
+# st.dataframe uses the theme (canvas grid); light theme here caused white tables
+# regardless of injected CSS.
+
+[theme]
+base = "dark"
+primaryColor = "#D4A85A"
+backgroundColor = "#0B0F14"
+secondaryBackgroundColor = "#121821"
+textColor = "#E6EDF3"
+borderColor = "#223042"
+# Off: Streamlit draws a light box around each widget when true (toggle, date, etc.).
+showWidgetBorder = false
+# Glide grid: align with app.py BG_ELEVATED / BORDER_STR
+dataframeBorderColor = "#2c3b4d"
+dataframeHeaderBackgroundColor = "#1b2532"
+linkColor = "#3B82F6"
+codeBackgroundColor = "#1b2532"
+font = "sans serif"
+
+[theme.sidebar]
+backgroundColor = "#121821"
+secondaryBackgroundColor = "#0B0F14"
+textColor = "#E6EDF3"
+
+[server]
+headless = true
