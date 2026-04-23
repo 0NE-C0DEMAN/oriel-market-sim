@@ -122,11 +122,11 @@ def render_falconx_sim_tab():
         # Bright, high-contrast palette: gold (Kalshi exec), cyan (Polymarket), green (ForecastEx).
         # Polymarket gets a brighter cyan than SERIES2 so it's clearly distinct against the dark surface.
         venue_palette = [
-            ("Kalshi",     GOLD,       "#0B0F14"),
-            ("Polymarket", "#5CC8FF",  "#0B0F14"),
-            ("ForecastEx", "#22C55E",  "#0B0F14"),
+            ("Kalshi",     GOLD),
+            ("Polymarket", "#5CC8FF"),
+            ("ForecastEx", "#22C55E"),
         ]
-        for venue, fill_color, edge_color in venue_palette:
+        for venue, color in venue_palette:
             sub = dislocations[dislocations["venue"] == venue]
             if sub.empty:
                 continue
@@ -137,8 +137,8 @@ def render_falconx_sim_tab():
                 x=sub["release_month"], y=sub["dislocation_bps"],
                 mode="markers", name=venue,
                 marker=dict(
-                    color=fill_color, size=sizes, opacity=0.88,
-                    line=dict(color=edge_color, width=1.5),
+                    color=color, size=sizes, opacity=0.7,
+                    line=dict(color=color, width=1),
                 ),
                 hovertemplate=f"<b>{venue}</b><br>%{{x}}<br>Dislocation: <b>%{{y:.1f}} bp</b><extra></extra>",
             ))
