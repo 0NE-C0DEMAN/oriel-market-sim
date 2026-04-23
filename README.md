@@ -15,8 +15,10 @@ streamlit run app.py
 
 ## What it does
 
-- **Live venue ingestion**: Kalshi + Polymarket + ForecastEx, with sample fallback where needed
-- **Cross-venue normalization**: all venue contracts are mapped onto a common implied YoY CPI basis before Oriel weighting
+- **Three-venue live ingestion**: Kalshi + Polymarket + ForecastEx, with sample fallback where needed
+- **Cross-venue normalization**: all venue contracts mapped onto a common implied YoY CPI basis before Oriel weighting
+- **Cross-venue contribution panel**: per-month weight breakdown showing how each venue feeds the Oriel reference
+- **Execution snapshot**: Kalshi-native threshold ladder vs the cross-venue Oriel reference
 - **Front-end dislocation analytics**: venue-implied YoY vs Oriel reference, scatter + confidence scoring
 - **Market-making backtest**: spread-based PnL loop with inventory tracking
 - **Parameter sweep heatmap**: quoted spread vs launch notional vs backtest PnL
