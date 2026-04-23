@@ -39,46 +39,36 @@ def _ingest_kalshi_front_end(config: HarnessConfig) -> list[VenueQuote]:
     os.environ.setdefault("KALSHI_TIMEOUT_SECONDS", "3")
     os.environ.setdefault("KALSHI_MAX_RETRIES", "1")
     methodology, snapshots, contracts_table, runtime_meta = build_live_cpi_feed()
-    df = contracts_table.copy()
-    if df.empty:
+    if not snapshots:
         return []
-    # Normalize to first few months and threshold-style rows only
-    month_col = 'Maturity' if 'Maturity' in df.columns else 'maturity'
-    value_col = 'Value' if 'Value' in df.columns else 'value'
-    bid_col = 'Bid' if 'Bid' in df.columns else 'bid'
-    ask_col = 'Ask' if 'Ask' in df.columns else 'ask'
-    mid_col = 'Chosen Price' if 'Chosen Price' in df.columns else ('mid' if 'mid' in df.columns else None)
-    spread_col = 'Spread' if 'Spread' in df.columns else ('spread' if 'spread' in df.columns else None)
-    vol_col = 'Volume' if 'Volume' in df.columns else 'volume'
-    oi_col = 'Open Interest' if 'Open Interest' in df.columns else 'open_interest'
-    age_col = 'Quote Age (s)' if 'Quote Age (s)' in df.columns else ('quote_age_seconds' if 'quote_age_seconds' in df.columns else None)
-    id_col = 'Ticker' if 'Ticker' in df.columns else ('contract_ticker' if 'contract_ticker' in df.columns else None)
-    q_col = 'Label' if 'Label' in df.columns else 'label'
-
-    df = df.sort_values(month_col).head(config.max_front_months * max(1, len(df) // max(len(df[month_col].unique()),1)))
+    feed_status = runtime_meta.get('feed_status', 'LIVE') if isinstance(runtime_meta, dict) else 'LIVE'
     out: list[VenueQuote] = []
-    for _, r in df.iterrows():
-        mid = float(r[mid_col]) if mid_col and pd.notna(r[mid_col]) else None
-        bid = float(r[bid_col]) if bid_col and pd.notna(r[bid_col]) else None
-        ask = float(r[ask_col]) if ask_col and pd.notna(r[ask_col]) else None
-        spread = float(r[spread_col]) if spread_col and pd.notna(r[spread_col]) else ((ask - bid) if ask is not None and bid is not None else None)
-        oi = float(r[oi_col]) if oi_col in r and pd.notna(r[oi_col]) else 0.0
-        vol = float(r[vol_col]) if vol_col in r and pd.notna(r[vol_col]) else 0.0
-        confidence = 1.0 / (1.0 + (spread or 0.0) * 10.0)
-        liquidity = min(1.0, (oi + vol) / 500.0)
-        out.append(VenueQuote(
-            venue='Kalshi',
-            release_month=str(r[month_col]),
-            threshold=float(r[value_col]) if value_col in r and pd.notna(r[value_col]) else 0.0,
-            bid=bid, ask=ask, mid=mid, spread=spread,
-            volume=vol, open_interest=oi,
-            quote_age_seconds=int(r[age_col]) if age_col and pd.notna(r[age_col]) else None,
-            liquidity_score=liquidity,
-            confidence_score=confidence,
-            market_id=str(r[id_col]) if id_col and pd.notna(r[id_col]) else f"kalshi-{r.name}",
-            question=str(r[q_col]) if q_col in r else f"Kalshi {r[month_col]} {value_col}",
-            source_status=runtime_meta.get('feed_status', 'LIVE') if isinstance(runtime_meta, dict) else 'LIVE',
-        ))
+    for snap in snapshots[:config.max_front_months]:
+        mat_label = snap.maturity.strftime("%Y-%m") if hasattr(snap.maturity, 'strftime') else str(snap.maturity)
+        for bt in snap.binary_thresholds:
+            obs = bt.observation
+            bid = obs.price_selection.bid if obs and obs.price_selection else None
+            ask = obs.price_selection.ask if obs and obs.price_selection else None
+            mid = obs.price_selection.chosen_price if obs and obs.price_selection else bt.probability
+            spread = (ask - bid) if bid is not None and ask is not None else None
+            oi = float(obs.open_interest) if obs and obs.open_interest else 0.0
+            vol = float(obs.volume) if obs and obs.volume else 0.0
+            ticker = obs.contract_ticker if obs else f"KXCPI-{mat_label}-T{bt.threshold}"
+            confidence = 1.0 / (1.0 + (spread or 0.0) * 10.0)
+            liquidity = min(1.0, (oi + vol) / 500.0)
+            out.append(VenueQuote(
+                venue='Kalshi',
+                release_month=mat_label,
+                threshold=float(bt.threshold),
+                bid=bid, ask=ask, mid=mid, spread=spread,
+                volume=vol, open_interest=oi,
+                quote_age_seconds=None,
+                liquidity_score=liquidity,
+                confidence_score=confidence,
+                market_id=ticker,
+                question=getattr(bt, 'label', f"CPI {mat_label} > {bt.threshold}%"),
+                source_status=feed_status,
+            ))
     return out
 
 
