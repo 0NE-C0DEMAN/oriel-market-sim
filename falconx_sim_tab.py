@@ -35,7 +35,7 @@ def render_falconx_sim_tab():
                                               key="sim_launch", label_visibility="collapsed")
     with ctl3:
         st.markdown("<div class='ctrl-vd-label' style='margin-bottom:6px;'>&nbsp;</div>", unsafe_allow_html=True)
-        live_data = st.toggle("Live Data", value=False, key="sim_live")
+        live_data = st.toggle("Live Data", value=True, key="sim_live")
 
     if live_data:
         import os

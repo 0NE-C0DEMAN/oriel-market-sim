@@ -54,7 +54,7 @@ html,body{{
 #MainMenu,footer,header{{visibility:hidden;}}
 
 /* ── Sliders & Toggles — gold-themed, compact ───────────────────────────── */
-/* Slider track */
+/* Slider thumb */
 [data-testid="stSlider"] [data-baseweb="slider"] div[role="slider"]{{
   background:{GOLD}!important;border-color:{GOLD}!important;
   width:14px!important;height:14px!important;
@@ -63,20 +63,24 @@ html,body{{
 [data-testid="stSlider"] [data-baseweb="slider"] div[data-testid="stTickBar"]{{
   display:none!important;
 }}
-/* Filled portion of track */
-[data-testid="stSlider"] [data-baseweb="slider"]>div>div>div:first-child{{
-  background:linear-gradient(90deg,{GOLD},rgba(212,168,90,0.5))!important;
-}}
-/* Unfilled track */
+/* Full track background (unfilled = dark) */
 [data-testid="stSlider"] [data-baseweb="slider"]>div>div{{
   background:{BG_ELEVATED}!important;border:1px solid {BORDER}!important;
   border-radius:4px!important;height:4px!important;
+}}
+/* Filled portion only (left of thumb = gold) */
+[data-testid="stSlider"] [data-baseweb="slider"]>div>div>div:first-child{{
+  background:{GOLD}!important;border-radius:4px!important;
+}}
+/* Unfilled portion (right of thumb = stays dark via parent) */
+[data-testid="stSlider"] [data-baseweb="slider"]>div>div>div:nth-child(2){{
+  background:transparent!important;
 }}
 /* Slider value label */
 [data-testid="stSlider"] [data-testid="stMarkdownContainer"] p{{
   color:{TEXT_SEC}!important;font-size:0.72rem!important;
 }}
-/* Select slider (pill style) */
+/* Tick labels */
 [data-testid="stSlider"] [data-baseweb="slider"] [data-testid="stTickBarMin"],
 [data-testid="stSlider"] [data-baseweb="slider"] [data-testid="stTickBarMax"]{{
   color:{TEXT_MUTED}!important;font-size:10px!important;
