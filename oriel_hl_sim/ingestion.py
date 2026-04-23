@@ -183,29 +183,24 @@ def load_front_end_market_snapshot(config: HarnessConfig | None = None, _ttl_bus
     config = config or HarnessConfig()
     all_quotes: list[VenueQuote] = []
     status_parts = []
-    live_enabled = os.getenv("KALSHI_ENABLE_LIVE_CPI", "false").lower() == "true"
-    if live_enabled:
-        try:
-            kquotes = _ingest_kalshi_front_end(config)
-            all_quotes.extend(kquotes)
-            status_parts.append('Kalshi:LIVE')
-        except Exception as exc:
-            status_parts.append(f'Kalshi:FALLBACK({type(exc).__name__})')
-        try:
-            pquotes = _ingest_polymarket_front_end(config)
-            all_quotes.extend(pquotes)
-            status_parts.append('Polymarket:LIVE')
-        except Exception as exc:
-            status_parts.append(f'Polymarket:FALLBACK({type(exc).__name__})')
+    try:
+        kquotes = _ingest_kalshi_front_end(config)
+        all_quotes.extend(kquotes)
+        status_parts.append('Kalshi:LIVE')
+    except Exception as exc:
+        status_parts.append(f'Kalshi:FALLBACK({type(exc).__name__})')
+    try:
+        pquotes = _ingest_polymarket_front_end(config)
+        all_quotes.extend(pquotes)
+        status_parts.append('Polymarket:LIVE')
+    except Exception as exc:
+        status_parts.append(f'Polymarket:FALLBACK({type(exc).__name__})')
     sample_path = Path(config.fallback_sample_csv)
     sample_quotes = _sample_quotes(sample_path if sample_path.is_absolute() else Path.cwd()/sample_path)
     venues_present = {q.venue for q in all_quotes}
-    if not live_enabled or not all_quotes:
+    if not all_quotes:
         all_quotes = sample_quotes
-        if not live_enabled:
-            status_parts.append('Sample')
-        else:
-            status_parts.append('Sample:FALLBACK')
+        status_parts.append('Sample:ON')
     elif len(venues_present) < 2:
         for sq in sample_quotes:
             if sq.venue not in venues_present:

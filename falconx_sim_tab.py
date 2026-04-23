@@ -39,13 +39,14 @@ def render_falconx_sim_tab():
                                               key="sim_launch", label_visibility="collapsed")
     with ctl3:
         st.markdown("<div class='ctrl-vd-label' style='margin-bottom:6px;'>&nbsp;</div>", unsafe_allow_html=True)
-        live_data = st.toggle("Live Data", value=True, key="sim_live")
+        refresh = st.checkbox("Refresh live venue snapshot", value=False, key="sim_refresh",
+                              help="By default Streamlit cache is used for responsiveness.")
 
     import os
-    if live_data:
-        os.environ["KALSHI_ENABLE_LIVE_CPI"] = "true"
-    else:
-        os.environ["KALSHI_ENABLE_LIVE_CPI"] = "false"
+    os.environ["KALSHI_ENABLE_LIVE_CPI"] = "true"
+
+    if refresh:
+        st.cache_data.clear()
 
     # TTL bust: integer bucket changes every _CACHE_TTL_SECONDS so Streamlit
     # re-runs the ingestion automatically on the next interaction after expiry.
