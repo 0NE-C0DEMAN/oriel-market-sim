@@ -21,7 +21,7 @@ streamlit run app.py
 - **Cross-venue contribution panel**: per-month weight breakdown showing how each venue feeds the Oriel reference
 - **Execution snapshot**: Kalshi-native threshold ladder vs the cross-venue Oriel reference
 - **Front-end dislocation analytics**: venue-implied YoY vs Oriel reference, high-contrast scatter (gold / cyan / green) with liquidity-weighted marker sizes, 11px floor so low-liquidity venues stay visually legible
-- **Market-making backtest**: 6-cell KPI strip (PnL, Fills, Fill Rate, Max Inventory, Market Stability, Liquidity Sustainability)
+- **Market-making backtest**: 7-cell KPI strip (PnL, Fills, Fill Rate, Avg Dislocation bp, Max Inventory, Market Stability, Liquidity Sustainability) with ribbon showing `Quoted XX bp \u2192 Effective YY bp` so the liquidity tightening/widening is visible at every launch size
 - **Parameter sweep heatmap**: quoted spread vs launch notional vs backtest PnL
 - **Oriel design language**: full CSS injection, KPI strips, desk tables, gold-themed charts, `automargin` axis titles for clean separation from curves and container walls
 
