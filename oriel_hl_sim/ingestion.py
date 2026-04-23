@@ -208,6 +208,18 @@ def _ingest_polymarket_front_end(config: HarnessConfig) -> tuple[list[VenueQuote
 
 
 
+def _extract_forecastex_threshold(contract) -> float | None:
+    """Extract threshold from ForecastEx product_code (e.g. CPIY_0526_4 → 4.0)."""
+    pc = getattr(contract, 'product_code', None) or ''
+    parts = str(pc).split('_')
+    if len(parts) >= 3:
+        try:
+            return float(parts[-1])
+        except (ValueError, TypeError):
+            pass
+    return getattr(contract, 'threshold', None)
+
+
 def _ingest_forecastex_front_end(config: HarnessConfig) -> tuple[list[VenueQuote], str]:
     os.environ.setdefault('FORECASTEX_REQUEST_TIMEOUT_SECONDS', '3')
     fx_cfg = ForecastExConfig(request_timeout_seconds=int(os.getenv('FORECASTEX_REQUEST_TIMEOUT_SECONDS', '3')))
@@ -215,28 +227,32 @@ def _ingest_forecastex_front_end(config: HarnessConfig) -> tuple[list[VenueQuote
     contracts, status = client.fetch_contracts()
     out: list[VenueQuote] = []
     for c in contracts:
-        normalized_threshold, units, method, note = _normalize_threshold('ForecastEx', c.threshold, c.event_question)
+        raw_thr = _extract_forecastex_threshold(c)
+        if raw_thr is None:
+            continue
+        normalized_threshold, units, method, note = _normalize_threshold('ForecastEx', raw_thr, c.event_question)
         if normalized_threshold is None:
             continue
         spread = (c.ask - c.bid) if c.bid is not None and c.ask is not None else None
         confidence = 1.0 / (1.0 + (spread or 0.0) * 10.0)
-        liquidity = min(1.0, ((c.open_interest or 0) + (c.volume or 0)) / 500.0)
+        liquidity = min(1.0, ((c.open_interest or 0) + (getattr(c, 'volume', 0) or 0)) / 500.0)
         out.append(VenueQuote(
             venue='ForecastEx',
             release_month=_normalize_release_month_label(str(c.release_month)),
             threshold=float(normalized_threshold),
-            raw_threshold=float(c.threshold) if c.threshold is not None else None,
+            raw_threshold=float(raw_thr),
             normalized_threshold=float(normalized_threshold),
             threshold_units=units,
             normalization_method=method,
             methodology_note=note,
             bid=c.bid, ask=c.ask, mid=c.mid, spread=spread,
-            volume=float(c.volume or 0.0), open_interest=float(c.open_interest or 0.0),
+            volume=float(getattr(c, 'volume', 0) or 0.0),
+            open_interest=float(c.open_interest or 0.0),
             quote_age_seconds=None,
             liquidity_score=float(liquidity),
             confidence_score=float(confidence),
             market_id=str(c.contract_id),
-            question=str(c.event_question),
+            question=str(c.event_question) if c.event_question else f'ForecastEx {c.release_month} > {raw_thr}%',
             source_status=status,
         ))
     return out, status

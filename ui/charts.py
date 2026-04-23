@@ -43,7 +43,7 @@ def _layout(**kwargs):
     base = dict(
         paper_bgcolor=BG_SURFACE, plot_bgcolor=BG_SURFACE,
         font=dict(family="Inter, DM Sans, sans-serif", color=TEXT_PRI, size=12),
-        margin=dict(l=56, r=24, t=28, b=48),
+        margin=dict(l=60, r=28, t=28, b=58),
         hoverlabel=dict(bgcolor=BG_ELEVATED, bordercolor=BORDER_STR,
                         font=dict(color=TEXT_PRI, family="Inter, DM Mono, monospace")),
         legend=dict(orientation="h", yanchor="bottom", y=1.02,
