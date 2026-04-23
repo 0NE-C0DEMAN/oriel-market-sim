@@ -153,11 +153,11 @@ def render_falconx_sim_tab():
         z=heat.values,
         x=[f"{int(c)} bp" for c in heat.columns],
         y=[f"${int(r/1e6)}MM" for r in heat.index],
-        colorscale="Blues",
+        colorscale=[[0, "#0e1420"], [0.3, "#1a3050"], [0.6, "#2a5a8a"], [1.0, GOLD]],
         zmin=0,
         hovertemplate="Spread: %{x}<br>Launch: %{y}<br>PnL: $%{z:,.0f}<extra></extra>",
         texttemplate="$%{z:,.0f}",
-        textfont=dict(size=10, color="#e6edf3"),
+        textfont=dict(size=11, color="#e6edf3", family="DM Mono, monospace"),
     ))
     hfig.update_layout(**_layout(
         height=280,
