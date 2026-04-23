@@ -210,10 +210,11 @@ def render_falconx_sim_tab():
         textfont=dict(size=11, color="#e6edf3", family="DM Mono, monospace"),
     ))
     hfig.update_layout(**_layout(
-        height=280,
+        height=300,
         xaxis=_xaxis(title="Quoted Spread"),
         yaxis=_yaxis(title="Launch Package"),
     ))
+    hfig.update_layout(margin=dict(l=72, r=40, t=28, b=64))
     st.plotly_chart(hfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_heat")
 
     # ── Sweep table (scrollable, 6-row viewport) ─────────────────────────
