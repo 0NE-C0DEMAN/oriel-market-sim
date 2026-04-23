@@ -174,8 +174,16 @@ class ForecastExClient:
 
     @staticmethod
     def _extract_threshold(text: str) -> Optional[float]:
+        # Primary (Chris): number followed by '%' (e.g. "Will CPI exceed 4%?")
         match = re.search(r'([0-9]+(?:\.[0-9]+)?)\s*%', text)
-        return float(match.group(1)) if match else None
+        if match:
+            return float(match.group(1))
+        # Fallback: product-code format CPIY_MMYY_N (e.g. CPIY_0526_4, CPIY_0626_4.8).
+        # Live pairs feed uses this when event_question is empty.
+        match = re.search(r'_\d{4}_(\d+(?:\.\d+)?)$', text)
+        if match:
+            return float(match.group(1))
+        return None
 
     @staticmethod
     def _extract_release_month(text: str) -> Optional[str]:
