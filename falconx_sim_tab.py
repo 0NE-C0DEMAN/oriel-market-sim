@@ -106,7 +106,7 @@ def render_falconx_sim_tab():
         <div class='kpi-cell'><div class='kpi-micro'>Fill Rate</div>
           <div class='kpi-value'>{s.get("fill_rate_pct", 0.0):.1f}%</div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Avg Dislocation</div>
-          <div class='kpi-value'>{avg_disl_bp:.1f} bp</div></div>
+          <div class='kpi-value'>{avg_disl_bp:.1f}<span style='font-size:0.68em;color:{TEXT_MUTED};font-weight:500;margin-left:3px;'>bp</span></div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Max Inventory</div>
           <div class='kpi-value'>{_fmt0(s["max_inventory_usd"])}</div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Market Stability</div>
