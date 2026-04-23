@@ -89,20 +89,24 @@ def render_falconx_sim_tab():
                       launch_notional_usd=launch_notional_mm * 1_000_000, config=cfg)
     s = bt.summary
 
-    # ── KPI strip (P2 liquidity upgrade: 6 cells) ─────────────────────────
+    # ── KPI strip (P2 liquidity upgrade: 7 cells incl. bp metrics) ────────
     pnl_col = POSITIVE if s["total_pnl_usd"] >= 0 else NEGATIVE
     stability_col = _score_color(s.get("market_stability_score", 0.0))
     sustain_col = _score_color(s.get("liquidity_self_sufficiency_score", 0.0))
+    eff_spread_bp = s.get("effective_spread_bps", float(spread_bps))
+    avg_disl_bp = s.get("avg_abs_dislocation_bps", 0.0)
     st.markdown(f"""
     <div class='kpi-strip-wrap' style='margin-bottom:10px'>
-      <div class='kpi-strip-ribbon'>SIMULATION BACKTEST \u00b7 Spread {spread_bps}bp \u00b7 ${launch_notional_mm}MM launch</div>
-      <div class='kpi-strip' style='display:grid;grid-template-columns:repeat(6,minmax(0,1fr))'>
+      <div class='kpi-strip-ribbon'>SIMULATION BACKTEST \u00b7 Quoted {spread_bps} bp \u2192 Effective {eff_spread_bp:.1f} bp \u00b7 ${launch_notional_mm}MM launch</div>
+      <div class='kpi-strip' style='display:grid;grid-template-columns:repeat(7,minmax(0,1fr))'>
         <div class='kpi-cell'><div class='kpi-micro'>Backtest PnL</div>
           <div class='kpi-value kpi-value--lead' style='color:{pnl_col};'>{_fmt0(s["total_pnl_usd"])}</div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Fills</div>
           <div class='kpi-value'>{s["fills"]:,}</div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Fill Rate</div>
           <div class='kpi-value'>{s.get("fill_rate_pct", 0.0):.1f}%</div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Avg Dislocation</div>
+          <div class='kpi-value'>{avg_disl_bp:.1f} bp</div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Max Inventory</div>
           <div class='kpi-value'>{_fmt0(s["max_inventory_usd"])}</div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Market Stability</div>
