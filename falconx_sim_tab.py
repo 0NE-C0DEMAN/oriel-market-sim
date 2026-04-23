@@ -131,7 +131,7 @@ def render_falconx_sim_tab():
         )
         st.plotly_chart(pnl_fig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_pnl")
 
-    # ── Venue snapshot table ──────────────────────────────────────────────
+    # ── Venue snapshot table (scrollable, 6-row viewport) ───────────────
     st.markdown("<div class='shdr oriel-section-gap'>Venue Snapshot</div>", unsafe_allow_html=True)
     show_cols = ["release_month", "venue", "implied_yoy", "oriel_reference_yoy",
                  "dislocation_bps", "liquidity_score", "confidence_score", "quote_age_seconds", "market_id"]
@@ -139,11 +139,13 @@ def render_falconx_sim_tab():
     for c in ["implied_yoy", "oriel_reference_yoy", "dislocation_bps", "liquidity_score", "confidence_score"]:
         show[c] = show[c].map(lambda x: f"{x:.4f}" if pd.notna(x) else "\u2014")
     tfig = _plotly_desk_table(show, gold_column="dislocation_bps")
-    h = DESK_TABLE_HEADER_PX + len(show) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
-    tfig.update_layout(height=h)
-    st.plotly_chart(tfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_snap_tbl")
+    content_h = DESK_TABLE_HEADER_PX + len(show) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
+    viewport_h = DESK_TABLE_HEADER_PX + min(len(show), 6) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
+    tfig.update_layout(height=content_h)
+    with st.container(height=viewport_h, border=False, key="scroll_sim_snap"):
+        st.plotly_chart(tfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_snap_tbl")
 
-    # ── Heatmap ───────────────────────────────────────────────────────────
+    # ── Heatmap (Blues colorscale matching Chris's original) ─────────────
     st.markdown("<div class='shdr oriel-section-gap'>Spread vs PnL \u00b7 Parameter Sweep</div>", unsafe_allow_html=True)
     sweep = run_parameter_sweep(dislocations, config=cfg)
     heat = sweep.pivot(index="launch_notional_usd", columns="spread_bps", values="total_pnl_usd")
@@ -151,7 +153,8 @@ def render_falconx_sim_tab():
         z=heat.values,
         x=[f"{int(c)} bp" for c in heat.columns],
         y=[f"${int(r/1e6)}MM" for r in heat.index],
-        colorscale=[[0, "#0e1420"], [0.5, "#1e2d42"], [1, GOLD]],
+        colorscale="Blues",
+        zmin=0,
         hovertemplate="Spread: %{x}<br>Launch: %{y}<br>PnL: $%{z:,.0f}<extra></extra>",
         texttemplate="$%{z:,.0f}",
         textfont=dict(size=10, color="#e6edf3"),
@@ -163,7 +166,7 @@ def render_falconx_sim_tab():
     ))
     st.plotly_chart(hfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_heat")
 
-    # ── Sweep table ───────────────────────────────────────────────────────
+    # ── Sweep table (scrollable, 6-row viewport) ─────────────────────────
     st.markdown("<div class='shdr oriel-section-gap'>Sweep Detail</div>", unsafe_allow_html=True)
     sweep_show = sweep.copy()
     sweep_show["total_pnl_usd"] = sweep_show["total_pnl_usd"].map(lambda x: f"${x:,.0f}")
@@ -172,9 +175,11 @@ def render_falconx_sim_tab():
     sweep_show["spread_bps"] = sweep_show["spread_bps"].map(lambda x: f"{x:.0f} bp")
     sweep_show["avg_abs_dislocation_bps"] = sweep_show["avg_abs_dislocation_bps"].map(lambda x: f"{x:.1f}")
     tfig2 = _plotly_desk_table(sweep_show, gold_column="total_pnl_usd")
-    h2 = DESK_TABLE_HEADER_PX + min(len(sweep_show), 8) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
-    tfig2.update_layout(height=h2)
-    st.plotly_chart(tfig2, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_sweep_tbl")
+    content_h2 = DESK_TABLE_HEADER_PX + len(sweep_show) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
+    viewport_h2 = DESK_TABLE_HEADER_PX + min(len(sweep_show), 6) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
+    tfig2.update_layout(height=content_h2)
+    with st.container(height=viewport_h2, border=False, key="scroll_sim_sweep"):
+        st.plotly_chart(tfig2, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_sweep_tbl")
 
     st.markdown(
         f"<div style='font-size:0.68rem;color:{TEXT_MUTED};margin-top:8px;'>"
