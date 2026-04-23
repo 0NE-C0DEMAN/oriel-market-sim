@@ -18,7 +18,7 @@ def _quote_prices(oriel_ref: float, spread_bps: float) -> tuple[float, float]:
 
 
 def run_backtest(dislocations: pd.DataFrame, spread_bps: float | None = None, launch_notional_usd: float | None = None,
-                 config: HarnessConfig | None = None, seed: int = 0) -> BacktestResult:
+                 config: HarnessConfig | None = None, seed: int = 42) -> BacktestResult:
     cfg = config or HarnessConfig()
     spread_bps = float(spread_bps if spread_bps is not None else cfg.base_spread_bps)
     launch_notional_usd = float(launch_notional_usd if launch_notional_usd is not None else cfg.launch_notional_usd)
