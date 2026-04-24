@@ -20,49 +20,6 @@ from ui.tokens import (
 _CACHE_TTL_SECONDS = 60  # auto-refresh every 60s
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def _cached_snapshot(ttl_bust: int):
-    """Cache the 14s venue-API pipeline. Keyed on 60s TTL bucket.
-
-    Config is rebuilt inside the cache so env-var changes take effect at
-    the next TTL rollover or refresh click (which clears the cache).
-    """
-    return load_front_end_market_snapshot(HarnessConfig(), _ttl_bust=ttl_bust)
-
-
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def _cached_sweep(ttl_bust: int):
-    """Cache the 0.7s run_parameter_sweep (24 backtests). Shares ttl_bust
-    with _cached_snapshot so it invalidates together with the data."""
-    _, dislocations, _ = _cached_snapshot(ttl_bust)
-    return run_parameter_sweep(dislocations, config=HarnessConfig())
-
-
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def _cached_compression_table(ttl_bust: int, spread_bps: int, launch_notional_usd: int):
-    """Cache the 4-backtest compression sensitivity table. Keyed on user
-    controls so slider moves recompute, but repeated reruns at the same
-    settings return the cached rows."""
-    _, dislocations, _ = _cached_snapshot(ttl_bust)
-    cfg = HarnessConfig()
-    rows = []
-    for pct in [1.00, 0.75, 0.50, 0.25]:
-        d2 = dislocations.copy()
-        if not d2.empty and "dislocation_bps" in d2.columns:
-            d2["implied_yoy"] = d2["oriel_reference_yoy"] + ((d2["implied_yoy"] - d2["oriel_reference_yoy"]) * pct)
-            d2["dislocation_bps"] = d2["dislocation_bps"] * pct
-        bt2 = run_backtest(d2, spread_bps=float(spread_bps), launch_notional_usd=float(launch_notional_usd), config=cfg)
-        rows.append({
-            "Dislocation Retained": f"{pct*100:.0f}%",
-            "Avg Dislocation": f"{bt2.summary.get('avg_abs_dislocation_bps', 0):.1f} bp",
-            "Net Edge": f"{bt2.summary.get('avg_net_executable_edge_bps', 0):.1f} bp",
-            "PnL": f"${bt2.summary.get('total_pnl_usd', 0):,.0f}",
-            "Fills": f"{bt2.summary.get('fills', 0):,}",
-            "Stability": f"{bt2.summary.get('market_stability_score', 0):.0f}",
-        })
-    return pd.DataFrame(rows)
-
-
 @st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def _cached_desk_fig(csv_blob: str, gold_column: str, content_h: int):
     """Cache the 1.1s _plotly_desk_table build. Keyed on formatted CSV blob."""
@@ -110,11 +67,10 @@ def render_falconx_sim_tab():
     if refresh:
         st.cache_data.clear()
 
-    # TTL bust: integer bucket changes every _CACHE_TTL_SECONDS so cached
-    # ingestion invalidates automatically after expiry. The 14s venue-API
-    # pipeline runs once per bucket instead of per rerun.
+    # TTL bust: integer bucket changes every _CACHE_TTL_SECONDS so Streamlit
+    # re-runs the ingestion automatically on the next interaction after expiry.
     ttl_bust = int(time.time() // _CACHE_TTL_SECONDS)
-    front_df, dislocations, status = _cached_snapshot(ttl_bust)
+    front_df, dislocations, status = load_front_end_market_snapshot(cfg, _ttl_bust=ttl_bust)
 
     # ── Feed status badge ─────────────────────────────────────────────────
     feed_parts = status.split(" | ")
@@ -346,7 +302,7 @@ def render_falconx_sim_tab():
 
     # ── Heatmap (Blues colorscale matching Chris's original) ─────────────
     st.markdown("<div class='shdr oriel-section-gap'>Spread vs PnL \u00b7 Parameter Sweep</div>", unsafe_allow_html=True)
-    sweep = _cached_sweep(ttl_bust)
+    sweep = run_parameter_sweep(dislocations, config=cfg)
     heat = sweep.pivot(index="launch_notional_usd", columns="spread_bps", values="total_pnl_usd")
     hfig = go.Figure(data=go.Heatmap(
         z=heat.values,
@@ -370,7 +326,22 @@ def render_falconx_sim_tab():
 
     # ── Dislocation compression sensitivity ──────────────────────────────
     st.markdown("<div class='shdr oriel-section-gap'>Dislocation Compression Sensitivity</div>", unsafe_allow_html=True)
-    comp = _cached_compression_table(ttl_bust, int(spread_bps), int(launch_notional_mm * 1_000_000))
+    comp_rows = []
+    for pct in [1.00, 0.75, 0.50, 0.25]:
+        d2 = dislocations.copy()
+        if not d2.empty and "dislocation_bps" in d2.columns:
+            d2["implied_yoy"] = d2["oriel_reference_yoy"] + ((d2["implied_yoy"] - d2["oriel_reference_yoy"]) * pct)
+            d2["dislocation_bps"] = d2["dislocation_bps"] * pct
+        bt2 = run_backtest(d2, spread_bps=spread_bps, launch_notional_usd=launch_notional_mm * 1_000_000, config=cfg)
+        comp_rows.append({
+            "Dislocation Retained": f"{pct*100:.0f}%",
+            "Avg Dislocation": f"{bt2.summary.get('avg_abs_dislocation_bps', 0):.1f} bp",
+            "Net Edge": f"{bt2.summary.get('avg_net_executable_edge_bps', 0):.1f} bp",
+            "PnL": f"${bt2.summary.get('total_pnl_usd', 0):,.0f}",
+            "Fills": f"{bt2.summary.get('fills', 0):,}",
+            "Stability": f"{bt2.summary.get('market_stability_score', 0):.0f}",
+        })
+    comp = pd.DataFrame(comp_rows)
     cfig = _plotly_desk_table(comp, gold_column="PnL")
     cfig.update_layout(height=DESK_TABLE_HEADER_PX + len(comp) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX)
     st.plotly_chart(cfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_compression_sensitivity")
