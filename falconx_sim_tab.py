@@ -20,6 +20,16 @@ from ui.tokens import (
 _CACHE_TTL_SECONDS = 60  # auto-refresh every 60s
 
 
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+def _cached_desk_fig(csv_blob: str, gold_column: str, content_h: int):
+    """Cache the 1.1s _plotly_desk_table build. Keyed on formatted CSV blob."""
+    from io import StringIO
+    df = pd.read_csv(StringIO(csv_blob))
+    fig = _plotly_desk_table(df, gold_column=gold_column)
+    fig.update_layout(height=content_h)
+    return fig
+
+
 def _fmt0(v):
     return f"${v:,.0f}"
 
@@ -243,10 +253,9 @@ def render_falconx_sim_tab():
         for c in audit.columns:
             if c not in ["release_month", "venue", "reference_source"]:
                 audit[c] = audit[c].map(lambda x: f"{x:.4f}" if pd.notna(x) else "\u2014")
-        atfig = _plotly_desk_table(audit, gold_column="net_executable_edge_bps")
         acontent_h = DESK_TABLE_HEADER_PX + len(audit) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
         aviewport_h = DESK_TABLE_HEADER_PX + min(len(audit), 6) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
-        atfig.update_layout(height=acontent_h)
+        atfig = _cached_desk_fig(audit.to_csv(index=False), "net_executable_edge_bps", acontent_h)
         with st.container(height=aviewport_h, border=False, key="scroll_sim_ref_audit"):
             st.plotly_chart(atfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_ref_audit_tbl")
 
@@ -264,10 +273,9 @@ def render_falconx_sim_tab():
         for c in ["raw_threshold", "normalized_threshold", "mid", "implied_yoy"]:
             if c in norm_show.columns:
                 norm_show[c] = norm_show[c].map(lambda x: f"{x:.4f}" if pd.notna(x) else "\u2014")
-        ntfig = _plotly_desk_table(norm_show, gold_column="normalization_method")
         ncontent_h = DESK_TABLE_HEADER_PX + len(norm_show) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
         nviewport_h = DESK_TABLE_HEADER_PX + min(len(norm_show), 6) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
-        ntfig.update_layout(height=ncontent_h)
+        ntfig = _cached_desk_fig(norm_show.to_csv(index=False), "normalization_method", ncontent_h)
         with st.container(height=nviewport_h, border=False, key="scroll_sim_norm_audit"):
             st.plotly_chart(ntfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_norm_audit_tbl")
 
