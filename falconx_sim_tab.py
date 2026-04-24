@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from oriel_hl_sim.config.markets import HarnessConfig
-from oriel_hl_sim.ingestion import load_front_end_market_snapshot, compute_venue_contribution_summary
+from oriel_hl_sim.ingestion import load_front_end_market_snapshot, compute_venue_contribution_summary, build_normalization_audit_table
 from oriel_hl_sim.simulation import run_backtest, run_parameter_sweep
 from ui.charts import _layout, _xaxis, _yaxis
 from ui.plotly_theme import PLOTLY_CONFIG
@@ -81,6 +81,8 @@ def render_falconx_sim_tab():
         unsafe_allow_html=True,
     )
 
+    st.info("Illustrative market-structure harness: live venue inputs are normalized against the Oriel core curve where available. PnL is indicative and includes spread, fee, and slippage buffers; it is not a production execution backtest.")
+
     if front_df.empty:
         st.warning("No front-end venue data available. Check venue connectivity or fallback sample data.")
         return
@@ -95,10 +97,11 @@ def render_falconx_sim_tab():
     sustain_col = _score_color(s.get("liquidity_self_sufficiency_score", 0.0))
     eff_spread_bp = s.get("effective_spread_bps", float(spread_bps))
     avg_disl_bp = s.get("avg_abs_dislocation_bps", 0.0)
+    avg_net_edge_bp = s.get("avg_net_executable_edge_bps", 0.0)
     st.markdown(f"""
     <div class='kpi-strip-wrap' style='margin-bottom:10px'>
       <div class='kpi-strip-ribbon'>SIMULATION BACKTEST \u00b7 Quoted {spread_bps} bp \u2192 Effective {eff_spread_bp:.1f} bp \u00b7 ${launch_notional_mm}MM launch</div>
-      <div class='kpi-strip' style='display:grid;grid-template-columns:repeat(7,minmax(0,1fr))'>
+      <div class='kpi-strip' style='display:grid;grid-template-columns:repeat(8,minmax(0,1fr))'>
         <div class='kpi-cell'><div class='kpi-micro'>Backtest PnL</div>
           <div class='kpi-value kpi-value--lead' style='color:{pnl_col};'>{_fmt0(s["total_pnl_usd"])}</div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Fills</div>
@@ -107,6 +110,8 @@ def render_falconx_sim_tab():
           <div class='kpi-value'>{s.get("fill_rate_pct", 0.0):.1f}%</div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Avg Dislocation</div>
           <div class='kpi-value'>{avg_disl_bp:.1f}<span style='font-size:0.68em;color:{TEXT_MUTED};font-weight:500;margin-left:3px;'>bp</span></div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Net Edge After Costs</div>
+          <div class='kpi-value'>{avg_net_edge_bp:.1f}<span style='font-size:0.68em;color:{TEXT_MUTED};font-weight:500;margin-left:3px;'>bp</span></div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Max Inventory</div>
           <div class='kpi-value'>{_fmt0(s["max_inventory_usd"])}</div></div>
         <div class='kpi-cell'><div class='kpi-micro'>Market Stability</div>
@@ -215,6 +220,38 @@ def render_falconx_sim_tab():
     with st.container(height=vviewport_h, border=False, key="scroll_sim_venue_contrib"):
         st.plotly_chart(vtfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_venue_contrib_tbl")
 
+    # ── Reference audit + normalization table ─────────────────────────────
+    st.markdown("<div class='shdr oriel-section-gap'>Reference + Normalization Audit</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:-2px 0 8px;'>"
+        "Shows the core Oriel reference, local venue blend, leave-one-venue-out reference, and raw-to-normalized contract units. "
+        "This is designed to answer the first FalconX diligence question: is the dislocation real or a convention artifact?</div>",
+        unsafe_allow_html=True,
+    )
+    audit_cols = ["release_month", "venue", "reference_source", "implied_yoy", "oriel_reference_yoy",
+                  "core_oriel_reference_yoy", "local_oriel_reference_yoy", "loo_oriel_reference_yoy",
+                  "dislocation_bps", "core_dislocation_bps", "loo_dislocation_bps", "net_executable_edge_bps"]
+    audit = dislocations[[c for c in audit_cols if c in dislocations.columns]].copy()
+    for c in audit.columns:
+        if c not in ["release_month", "venue", "reference_source"]:
+            audit[c] = audit[c].map(lambda x: f"{x:.4f}" if pd.notna(x) else "—")
+    atfig = _plotly_desk_table(audit, gold_column="net_executable_edge_bps")
+    atfig.update_layout(height=DESK_TABLE_HEADER_PX + len(audit) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX)
+    with st.container(height=DESK_TABLE_HEADER_PX + min(len(audit), 6) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX, border=False, key="scroll_sim_ref_audit"):
+        st.plotly_chart(atfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_ref_audit_tbl")
+
+    norm = build_normalization_audit_table(front_df)
+    norm_show_cols = ["release_month", "venue", "source_status", "raw_threshold", "threshold_units",
+                      "normalized_threshold", "normalization_method", "mid", "implied_yoy", "market_id"]
+    norm_show = norm[[c for c in norm_show_cols if c in norm.columns]].copy()
+    for c in ["raw_threshold", "normalized_threshold", "mid", "implied_yoy"]:
+        if c in norm_show.columns:
+            norm_show[c] = norm_show[c].map(lambda x: f"{x:.4f}" if pd.notna(x) else "—")
+    ntfig = _plotly_desk_table(norm_show, gold_column="normalization_method")
+    ntfig.update_layout(height=DESK_TABLE_HEADER_PX + len(norm_show) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX)
+    with st.container(height=DESK_TABLE_HEADER_PX + min(len(norm_show), 6) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX, border=False, key="scroll_sim_norm_audit"):
+        st.plotly_chart(ntfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_norm_audit_tbl")
+
     # ── Execution snapshot (Kalshi-native rows vs cross-venue reference) ──
     st.markdown("<div class='shdr oriel-section-gap'>Execution Snapshot</div>", unsafe_allow_html=True)
     st.markdown(
@@ -259,6 +296,28 @@ def render_falconx_sim_tab():
                      automargin=True),
     ))
     st.plotly_chart(hfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_heat")
+
+    # ── Dislocation compression sensitivity ──────────────────────────────
+    st.markdown("<div class='shdr oriel-section-gap'>Dislocation Compression Sensitivity</div>", unsafe_allow_html=True)
+    comp_rows = []
+    for pct in [1.00, 0.75, 0.50, 0.25]:
+        d2 = dislocations.copy()
+        if not d2.empty and "dislocation_bps" in d2.columns:
+            d2["implied_yoy"] = d2["oriel_reference_yoy"] + ((d2["implied_yoy"] - d2["oriel_reference_yoy"]) * pct)
+            d2["dislocation_bps"] = d2["dislocation_bps"] * pct
+        bt2 = run_backtest(d2, spread_bps=spread_bps, launch_notional_usd=launch_notional_mm * 1_000_000, config=cfg)
+        comp_rows.append({
+            "Dislocation Retained": f"{pct*100:.0f}%",
+            "Avg Dislocation": f"{bt2.summary.get('avg_abs_dislocation_bps', 0):.1f} bp",
+            "Net Edge": f"{bt2.summary.get('avg_net_executable_edge_bps', 0):.1f} bp",
+            "PnL": f"${bt2.summary.get('total_pnl_usd', 0):,.0f}",
+            "Fills": f"{bt2.summary.get('fills', 0):,}",
+            "Stability": f"{bt2.summary.get('market_stability_score', 0):.0f}",
+        })
+    comp = pd.DataFrame(comp_rows)
+    cfig = _plotly_desk_table(comp, gold_column="PnL")
+    cfig.update_layout(height=DESK_TABLE_HEADER_PX + len(comp) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX)
+    st.plotly_chart(cfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_compression_sensitivity")
 
     # ── Sweep table (scrollable, 6-row viewport) ─────────────────────────
     st.markdown("<div class='shdr oriel-section-gap'>Sweep Detail</div>", unsafe_allow_html=True)

@@ -16,12 +16,18 @@ streamlit run app.py
 ## What it does
 
 - **Three-venue live ingestion (US headline CPI only)**: Kalshi (`KXCPI` series), Polymarket (Gamma API, non-US inflation markets excluded via `exclude_country_keywords`), ForecastEx (CSV pairs feed, `CPIY_` product prefix — filters out Canada/HK/Japan/India/Spain/Singapore/Germany/US-Core)
-- **Cross-venue normalization** onto a common **normalized implied YoY CPI** basis before Oriel weighting
-- **Liquidity / stability simulation loop**: spread capture vs directional PnL split, liquidity multiplier, effective spread tightening, inventory mean-reversion
-- **Cross-venue contribution panel**: per-month weight breakdown showing how each venue feeds the Oriel reference
+- **Core Oriel curve wiring (default reference)**: the sim loads `data/oriel_curve_current.csv` exported from the core Oriel app and uses it as the reference for venue dislocation. Local venue-blend is still computed and shown as a diagnostic alongside the core curve so the dislocation can be decomposed into *real market-structure* versus *reference-construction artifact*.
+- **Cross-venue normalization** onto a common **normalized implied YoY CPI** basis before Oriel weighting. Kalshi YoY-labeled rows now bypass monthly annualization so sample/demo YoY contracts are not double-counted.
+- **Leave-one-venue-out dislocation diagnostics**: each venue's dislocation is also reported against a reference rebuilt without that venue's contribution, so single-venue skew is visible instead of hidden in the blend.
+- **Reference + Normalization Audit tables**: first table shows `reference_source` (core vs local fallback), local / core / LOO references per row, with the three dislocation variants. Second table shows raw threshold, units, normalized threshold, and the exact conversion method for every ingested contract so a FalconX diligence review can verify the math line by line.
+- **Liquidity / stability simulation loop**: spread capture vs directional PnL split, liquidity multiplier, effective spread tightening, inventory mean-reversion. Executable edge subtracts both `slippage_buffer_bps` and `fee_buffer_bps` from the raw dislocation.
+- **Net edge after costs (bp)**: reported on every path row and in the KPI strip so gross dislocation vs realistically capturable edge is never conflated.
+- **Dislocation compression sensitivity**: sweeps dislocation retained at 100% / 75% / 50% / 25% and reports PnL, Fills, Net Edge, and Stability at each level so the demo directly answers "what if only half of the visible dislocation is real?"
+- **Methodology caveat banner** above the KPI strip makes clear this is an illustrative market-structure harness, not a production execution backtest.
+- **Cross-venue contribution panel**: per-month weight breakdown showing how each venue feeds the local Oriel reference (still useful for the venue-blend narrative even when the default reference is the core curve).
 - **Execution snapshot**: Kalshi-native threshold ladder vs the cross-venue Oriel reference
 - **Front-end dislocation analytics**: venue-implied YoY vs Oriel reference, high-contrast scatter (gold / cyan / green) with liquidity-weighted marker sizes, 11px floor so low-liquidity venues stay visually legible
-- **Market-making backtest**: 7-cell KPI strip (PnL, Fills, Fill Rate, Avg Dislocation bp, Max Inventory, Market Stability, Liquidity Sustainability) with ribbon showing `Quoted XX bp \u2192 Effective YY bp` so the liquidity tightening/widening is visible at every launch size
+- **Market-making backtest**: 8-cell KPI strip (PnL, Fills, Fill Rate, Avg Dislocation bp, Net Edge After Costs bp, Max Inventory, Market Stability, Liquidity Sustainability) with ribbon showing `Quoted XX bp → Effective YY bp` so the liquidity tightening/widening is visible at every launch size
 - **Parameter sweep heatmap**: quoted spread vs launch notional vs backtest PnL
 - **Oriel design language**: full CSS injection, KPI strips, desk tables, gold-themed charts, `automargin` axis titles for clean separation from curves and container walls
 
@@ -38,13 +44,15 @@ streamlit run app.py
 
 ```
 app.py                          Standalone Streamlit entrypoint
-falconx_sim_tab.py              Main renderer (KPI strip, charts, tables, heatmap)
+falconx_sim_tab.py              Main renderer (KPI strip, charts, audit tables, compression sensitivity, heatmap)
 oriel_hl_sim/
   common.py                     Dataclasses (VenueQuote, DislocationRow, etc.)
-  config/markets.py             HarnessConfig (env-driven, frozen dataclass)
-  ingestion.py                  Kalshi + Polymarket + ForecastEx ingest, normalization, Oriel reference
-  simulation.py                 Backtest engine + parameter sweep
+  config/markets.py             HarnessConfig (env-driven, frozen dataclass) incl. core_curve_csv, reference_mode, slippage_buffer_bps, fee_buffer_bps
+  core_curve_adapter.py         Loads the core Oriel curve export (data/oriel_curve_current.csv)
+  ingestion.py                  Kalshi + Polymarket + ForecastEx ingest, normalization, core-vs-local reference, LOO diagnostics, audit builder
+  simulation.py                 Backtest engine + parameter sweep, net executable edge after buffers
 venues/                         Venue adapters (shared with core Oriel app)
+data/oriel_curve_current.csv    Core Oriel curve export — used as the default reference when present
 data/hyperliquid_mvp/           Sample frontend quotes for offline demo
 assets/oriel.css                Full Oriel dark theme CSS
 ui/                             Shared UI infrastructure (tokens, charts, tables, theme)
@@ -61,6 +69,10 @@ ui/                             Shared UI infrastructure (tokens, charts, tables
 | `ORIEL_SIM_INVENTORY_LIMIT_USD` | `750000` | Max inventory exposure |
 | `POLYMARKET_REQUEST_TIMEOUT_SECONDS` | `3` | Polymarket request timeout |
 | `FORECASTEX_REQUEST_TIMEOUT_SECONDS` | `3` | ForecastEx request timeout |
+| `ORIEL_CORE_CURVE_CSV` | `data/oriel_curve_current.csv` | Path to the core Oriel curve export used as the sim reference |
+| `ORIEL_SIM_REFERENCE_MODE` | `core` | `core` uses the core curve with local blend as fallback; `local_blend` flips the priority |
+| `ORIEL_SIM_SLIPPAGE_BUFFER_BPS` | `8` | Slippage deducted from raw dislocation when computing net executable edge |
+| `ORIEL_SIM_FEE_BUFFER_BPS` | `2` | Fee deducted from raw dislocation when computing net executable edge |
 
 ## Purpose
 

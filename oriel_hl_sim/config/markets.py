@@ -13,5 +13,9 @@ class HarnessConfig:
     taker_clip_usd: float = field(default_factory=lambda: float(os.getenv('ORIEL_SIM_TAKER_CLIP_USD', '50000')))
     base_spread_bps: float = field(default_factory=lambda: float(os.getenv('ORIEL_SIM_BASE_SPREAD_BPS', '18')))
     inventory_limit_usd: float = field(default_factory=lambda: float(os.getenv('ORIEL_SIM_INVENTORY_LIMIT_USD', '750000')))
+    core_curve_csv: str = field(default_factory=lambda: os.getenv('ORIEL_CORE_CURVE_CSV', 'data/oriel_curve_current.csv'))
+    reference_mode: str = field(default_factory=lambda: os.getenv('ORIEL_SIM_REFERENCE_MODE', 'core'))  # core | local_blend
+    slippage_buffer_bps: float = field(default_factory=lambda: float(os.getenv('ORIEL_SIM_SLIPPAGE_BUFFER_BPS', '8')))
+    fee_buffer_bps: float = field(default_factory=lambda: float(os.getenv('ORIEL_SIM_FEE_BUFFER_BPS', '2')))
     maker_fee_bps: float = field(default_factory=lambda: float(os.getenv('ORIEL_SIM_MAKER_FEE_BPS', '0')))
     taker_fee_bps: float = field(default_factory=lambda: float(os.getenv('ORIEL_SIM_TAKER_FEE_BPS', '0')))

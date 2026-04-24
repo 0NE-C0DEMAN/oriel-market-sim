@@ -78,7 +78,7 @@ def run_backtest(
         ref = float(row.oriel_reference_yoy)
         mkt = float(row.implied_yoy)
         bid, ask = _quote_prices(ref, effective_spread_bps)
-        edge_after_spread = max(0.0, abs(float(row.dislocation_bps)) - effective_spread_bps / 2.0)
+        edge_after_spread = max(0.0, abs(float(row.dislocation_bps)) - effective_spread_bps / 2.0 - cfg.slippage_buffer_bps - cfg.fee_buffer_bps)
 
         base_fill = 0.02 + min(0.55, edge_after_spread / 65.0)
         confidence_bonus = 0.15 * float(getattr(row, 'confidence_score', 0.5) or 0.5)
@@ -141,6 +141,7 @@ def run_backtest(
             'liquidity_multiplier': liquidity_multiplier,
             'fill_prob': fill_prob,
             'quote_width_bps': effective_spread_bps,
+            'net_executable_edge_bps': edge_after_spread,
         })
 
     path = pd.DataFrame(rows)
@@ -169,6 +170,7 @@ def run_backtest(
         'fills': fills,
         'quote_uptime_pct': 100.0,
         'avg_abs_dislocation_bps': float(path['dislocation_bps'].abs().mean()) if not path.empty else 0.0,
+        'avg_net_executable_edge_bps': float(path['net_executable_edge_bps'].mean()) if 'net_executable_edge_bps' in path.columns and not path.empty else 0.0,
         'max_inventory_usd': max_inventory_usd,
         'launch_notional_usd': launch_notional_usd,
         'spread_bps': spread_bps,
