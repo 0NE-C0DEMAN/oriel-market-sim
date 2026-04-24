@@ -229,6 +229,8 @@ def render_falconx_sim_tab():
     )
     ref_tab, norm_tab = st.tabs(["Reference Audit", "Normalization Audit"])
 
+    _audit_viewport_h = DESK_TABLE_HEADER_PX + 6 * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
+
     with ref_tab:
         st.markdown(
             f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:6px 0 8px;'>"
@@ -240,13 +242,7 @@ def render_falconx_sim_tab():
                       "core_oriel_reference_yoy", "local_oriel_reference_yoy", "loo_oriel_reference_yoy",
                       "dislocation_bps", "core_dislocation_bps", "loo_dislocation_bps", "net_executable_edge_bps"]
         audit = dislocations[[c for c in audit_cols if c in dislocations.columns]].copy()
-        for c in audit.columns:
-            if c not in ["release_month", "venue", "reference_source"]:
-                audit[c] = audit[c].map(lambda x: f"{x:.4f}" if pd.notna(x) else "\u2014")
-        atfig = _plotly_desk_table(audit, gold_column="net_executable_edge_bps")
-        atfig.update_layout(height=DESK_TABLE_HEADER_PX + len(audit) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX)
-        with st.container(height=DESK_TABLE_HEADER_PX + min(len(audit), 6) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX, border=False, key="scroll_sim_ref_audit"):
-            st.plotly_chart(atfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_ref_audit_tbl")
+        st.dataframe(audit, use_container_width=True, hide_index=True, height=_audit_viewport_h)
 
     with norm_tab:
         st.markdown(
@@ -259,13 +255,7 @@ def render_falconx_sim_tab():
         norm_show_cols = ["release_month", "venue", "source_status", "raw_threshold", "threshold_units",
                           "normalized_threshold", "normalization_method", "mid", "implied_yoy", "market_id"]
         norm_show = norm[[c for c in norm_show_cols if c in norm.columns]].copy()
-        for c in ["raw_threshold", "normalized_threshold", "mid", "implied_yoy"]:
-            if c in norm_show.columns:
-                norm_show[c] = norm_show[c].map(lambda x: f"{x:.4f}" if pd.notna(x) else "\u2014")
-        ntfig = _plotly_desk_table(norm_show, gold_column="normalization_method")
-        ntfig.update_layout(height=DESK_TABLE_HEADER_PX + len(norm_show) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX)
-        with st.container(height=DESK_TABLE_HEADER_PX + min(len(norm_show), 6) * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX, border=False, key="scroll_sim_norm_audit"):
-            st.plotly_chart(ntfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_norm_audit_tbl")
+        st.dataframe(norm_show, use_container_width=True, hide_index=True, height=_audit_viewport_h)
 
     # ── Execution snapshot (Kalshi-native rows vs cross-venue reference) ──
     st.markdown("<div class='shdr oriel-section-gap'>Execution Snapshot</div>", unsafe_allow_html=True)
