@@ -72,23 +72,13 @@ def render_falconx_sim_tab():
             badges += f"<span style='font-size:0.64rem;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(245,158,11,0.12);color:{WARNING};margin-right:6px;'>{part}</span>"
         else:
             badges += f"<span style='font-size:0.64rem;font-weight:600;padding:3px 8px;border-radius:4px;background:rgba(30,45,66,0.5);color:{TEXT_MUTED};margin-right:6px;'>{part}</span>"
-    st.markdown(f"<div style='margin:6px 0 12px;'>{badges}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='margin:6px 0 10px;'>{badges}</div>", unsafe_allow_html=True)
     st.markdown(
-        f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:-2px 0 12px;'>"
+        f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:-2px 0 14px;line-height:1.55;'>"
         "Cross-venue view: <b>normalized implied YoY CPI</b>. Venue contracts are normalized onto a common annualized implied CPI basis for comparison. "
-        "Kalshi monthly thresholds use compounded annualization ((1+m)^12 \u2212 1); Polymarket and ForecastEx pass through unless contract scale implies monthly normalization."
-        "</div>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:-4px 0 12px;"
-        "padding:6px 10px;border-left:2px solid rgba(245,158,11,0.45);"
-        "background:rgba(245,158,11,0.04);border-radius:0 3px 3px 0;'>"
-        "<span style='color:#f59e0b;font-weight:600;letter-spacing:0.04em;'>SCOPE</span>"
-        f"<span style='color:{TEXT_MUTED};margin:0 6px;'>\u00b7</span>"
-        "Illustrative market-structure harness. Live venue inputs are normalized against the Oriel core curve where available. "
-        "PnL is indicative and includes spread, fee, and slippage buffers; it is not a production execution backtest."
+        "Kalshi monthly thresholds use compounded annualization ((1+m)^12 \u2212 1); Polymarket and ForecastEx pass through unless contract scale implies monthly normalization. "
+        "Reference defaults to the Oriel core curve where available, with the local venue blend shown as a diagnostic. "
+        f"<span style='color:{TEXT_SEC};'>PnL is indicative and nets spread, fee, and slippage buffers; this is an illustrative market-structure harness, not a production execution backtest.</span>"
         "</div>",
         unsafe_allow_html=True,
     )
