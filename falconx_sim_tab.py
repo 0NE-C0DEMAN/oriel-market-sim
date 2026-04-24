@@ -231,6 +231,32 @@ def render_falconx_sim_tab():
 
     _audit_viewport_h = DESK_TABLE_HEADER_PX + 6 * DESK_TABLE_ROW_PX + DESK_TABLE_PAD_PX
 
+    def _oriel_styler(df: pd.DataFrame, gold_cols: list[str], num_cols: list[str]) -> object:
+        """Mimic the gold-accent Oriel desk-table look on top of st.dataframe.
+
+        Number formatting, gold color on accent columns, and a light mono-ish
+        feel. Keeps Glide virtualization so large tables stay snappy.
+        """
+        s = df.style.format({c: "{:.4f}" for c in num_cols if c in df.columns}, na_rep="\u2014")
+        for col in gold_cols:
+            if col in df.columns:
+                s = s.map(lambda _v: f"color: {GOLD}; font-weight: 600;", subset=[col])
+        s = s.set_properties(**{
+            "font-family": "DM Mono, Inter, monospace",
+            "font-size": "0.78rem",
+        })
+        s = s.set_table_styles([
+            {"selector": "thead th", "props": [
+                ("background-color", BG_ELEVATED),
+                ("color", TEXT_SEC),
+                ("font-weight", "600"),
+                ("font-size", "0.7rem"),
+                ("letter-spacing", "0.04em"),
+                ("text-transform", "uppercase"),
+            ]},
+        ])
+        return s
+
     with ref_tab:
         st.markdown(
             f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:6px 0 8px;'>"
@@ -242,7 +268,11 @@ def render_falconx_sim_tab():
                       "core_oriel_reference_yoy", "local_oriel_reference_yoy", "loo_oriel_reference_yoy",
                       "dislocation_bps", "core_dislocation_bps", "loo_dislocation_bps", "net_executable_edge_bps"]
         audit = dislocations[[c for c in audit_cols if c in dislocations.columns]].copy()
-        st.dataframe(audit, use_container_width=True, hide_index=True, height=_audit_viewport_h)
+        _audit_num = [c for c in audit.columns if c not in ("release_month", "venue", "reference_source")]
+        st.dataframe(
+            _oriel_styler(audit, gold_cols=["net_executable_edge_bps"], num_cols=_audit_num),
+            use_container_width=True, hide_index=True, height=_audit_viewport_h,
+        )
 
     with norm_tab:
         st.markdown(
@@ -255,7 +285,11 @@ def render_falconx_sim_tab():
         norm_show_cols = ["release_month", "venue", "source_status", "raw_threshold", "threshold_units",
                           "normalized_threshold", "normalization_method", "mid", "implied_yoy", "market_id"]
         norm_show = norm[[c for c in norm_show_cols if c in norm.columns]].copy()
-        st.dataframe(norm_show, use_container_width=True, hide_index=True, height=_audit_viewport_h)
+        _norm_num = ["raw_threshold", "normalized_threshold", "mid", "implied_yoy"]
+        st.dataframe(
+            _oriel_styler(norm_show, gold_cols=["normalization_method"], num_cols=_norm_num),
+            use_container_width=True, hide_index=True, height=_audit_viewport_h,
+        )
 
     # ── Execution snapshot (Kalshi-native rows vs cross-venue reference) ──
     st.markdown("<div class='shdr oriel-section-gap'>Execution Snapshot</div>", unsafe_allow_html=True)
