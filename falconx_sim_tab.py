@@ -81,7 +81,17 @@ def render_falconx_sim_tab():
         unsafe_allow_html=True,
     )
 
-    st.info("Illustrative market-structure harness: live venue inputs are normalized against the Oriel core curve where available. PnL is indicative and includes spread, fee, and slippage buffers; it is not a production execution backtest.")
+    st.markdown(
+        f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:-4px 0 12px;"
+        "padding:6px 10px;border-left:2px solid rgba(245,158,11,0.45);"
+        "background:rgba(245,158,11,0.04);border-radius:0 3px 3px 0;'>"
+        "<span style='color:#f59e0b;font-weight:600;letter-spacing:0.04em;'>SCOPE</span>"
+        f"<span style='color:{TEXT_MUTED};margin:0 6px;'>\u00b7</span>"
+        "Illustrative market-structure harness. Live venue inputs are normalized against the Oriel core curve where available. "
+        "PnL is indicative and includes spread, fee, and slippage buffers; it is not a production execution backtest."
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
     if front_df.empty:
         st.warning("No front-end venue data available. Check venue connectivity or fallback sample data.")
