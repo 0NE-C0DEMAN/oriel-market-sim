@@ -22,7 +22,6 @@ st.markdown("""
 <div class='oriel-page-head'>
   <span class='oriel-page-title'>Oriel Market Simulation</span>
   <span class='version-chip'>CPI Curve & Perp Pilot</span>
-  <span class='version-chip' style='background:#1b2a3e;color:#7aa2f7;border-color:#2e4a72;'>FalconX</span>
 </div>""", unsafe_allow_html=True)
 
 st.markdown(
