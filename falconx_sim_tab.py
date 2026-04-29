@@ -9,6 +9,7 @@ import streamlit as st
 from oriel_hl_sim.config.markets import HarnessConfig
 from oriel_hl_sim.ingestion import load_front_end_market_snapshot, compute_venue_contribution_summary, build_normalization_audit_table
 from oriel_hl_sim.simulation import run_backtest, run_parameter_sweep
+from oriel_hl_sim.scaletrader import generate_scaletrader_ticket
 from ui.charts import _layout, _xaxis, _yaxis
 from ui.plotly_theme import PLOTLY_CONFIG
 from ui.tables import _plotly_desk_table
@@ -28,6 +29,122 @@ def _cached_desk_fig(csv_blob: str, gold_column: str, content_h: int):
     fig = _plotly_desk_table(df, gold_column=gold_column)
     fig.update_layout(height=content_h)
     return fig
+
+
+@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner="Loading live venue snapshot…")
+def _cached_snapshot(_ttl_bust: int):
+    """Cache the 14s 3-venue REST pipeline (Kalshi + Polymarket + ForecastEx).
+
+    Keyed on the integer 60s TTL bucket — flips automatically and
+    Streamlit refetches on the next rerun within the new bucket.
+    HarnessConfig is rebuilt inside so env-var changes take effect at
+    cache invalidation or refresh-button clicks.
+    """
+    return load_front_end_market_snapshot(HarnessConfig(), _ttl_bust=_ttl_bust)
+
+
+@st.fragment
+def _render_scaletrader_card(ticket_source, default_label):
+    """Standalone fragment so changing the contract / max position / ladder
+    depth re-runs only this card's body — not the whole tab pipeline (venue
+    ingest, backtest, charts, audit tables, heatmap, sweep)."""
+    sel_col, max_col, depth_col = st.columns([2.4, 1, 1], gap="medium")
+    with sel_col:
+        st.markdown("<div class='ctrl-vd-label'>Selected Venue Contract</div>", unsafe_allow_html=True)
+        labels = ticket_source["contract_label"].tolist()
+        selected_label = st.selectbox(
+            "Selected venue contract", labels,
+            index=labels.index(default_label) if default_label in labels else 0,
+            key="scaletrader_selected_contract",
+            label_visibility="collapsed",
+        )
+    with max_col:
+        st.markdown("<div class='ctrl-vd-label'>Max Position</div>", unsafe_allow_html=True)
+        max_position = st.number_input(
+            "Max position", min_value=100, max_value=50_000,
+            value=2_000, step=100,
+            key="scaletrader_max_position",
+            label_visibility="collapsed",
+        )
+    with depth_col:
+        st.markdown("<div class='ctrl-vd-label'>Target Ladder Depth</div>", unsafe_allow_html=True)
+        ladder_depth = st.slider(
+            "Target ladder depth", min_value=3, max_value=20, value=8, step=1,
+            key="scaletrader_ladder_depth",
+            label_visibility="collapsed",
+        )
+
+    selected_row = ticket_source[ticket_source["contract_label"].eq(selected_label)].iloc[0]
+    ticket = generate_scaletrader_ticket(
+        selected_row,
+        max_position=int(max_position),
+        target_ladder_depth=int(ladder_depth),
+    )
+    side_col = POSITIVE if ticket.side == "Buy YES" else NEGATIVE
+
+    # Sign-before-dollar formatting so "$-0.03" becomes "−$0.03".
+    pt_offset = ticket.profit_taker_offset
+    pt_display = f"+${pt_offset:.2f}" if pt_offset >= 0 else f"−${abs(pt_offset):.2f}"
+
+    st.markdown(f"""
+    <div class='kpi-strip-wrap' style='margin-top:4px;margin-bottom:14px'>
+      <div class='kpi-strip-ribbon'>ILLUSTRATIVE SCALETRADER TICKET · NOT ROUTED · {ticket.selected_venue_contract}</div>
+      <div class='kpi-strip' style='display:grid;grid-template-columns:repeat(8,minmax(0,1fr))'>
+        <div class='kpi-cell'><div class='kpi-micro'>Side</div><div class='kpi-value kpi-value--lead' style='color:{side_col};font-size:1.22rem;'>{ticket.side}</div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Start Price</div><div class='kpi-value'>${ticket.start_price:.2f}</div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Increment</div><div class='kpi-value'>${ticket.increment:.2f}</div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Levels</div><div class='kpi-value'>{ticket.levels}</div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Clip Size</div><div class='kpi-value'>{ticket.clip_size:,}</div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Max Exposure</div><div class='kpi-value'>{ticket.max_exposure:,}</div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Profit-Taker</div><div class='kpi-value'>{pt_display}</div></div>
+        <div class='kpi-cell'><div class='kpi-micro'>Oriel Edge</div><div class='kpi-value'>{ticket.edge_probability_points:.2f}<span style='font-size:0.68em;color:{TEXT_MUTED};font-weight:500;margin-left:3px;'>pp</span></div></div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Bigger, readable numbers — 1.05rem mono in gold, units muted+small.
+    _VAL_STYLE = (
+        "font-family:'DM Mono',monospace;font-size:1.05rem;font-weight:600;"
+        f"color:{GOLD};margin-top:8px;letter-spacing:-0.01em;line-height:1.2;"
+    )
+    _UNIT_STYLE = (
+        f"font-size:0.72em;color:{TEXT_MUTED};margin-left:5px;font-weight:500;"
+        "letter-spacing:0;"
+    )
+    d1, d2, d3 = st.columns(3, gap="medium")
+    d1.markdown(
+        f"<div class='note-box' style='min-height:78px;'>"
+        f"<div class='kpi-micro'>Oriel Fair Value</div>"
+        f"<div style=\"{_VAL_STYLE}\">{ticket.oriel_fair_value:.4f}"
+        f"<span style=\"{_UNIT_STYLE}\">% YoY</span></div>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+    d2.markdown(
+        f"<div class='note-box' style='min-height:78px;'>"
+        f"<div class='kpi-micro'>Contract Market Price</div>"
+        f"<div style=\"{_VAL_STYLE}\">${ticket.contract_market_price:.2f}</div>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+    d3.markdown(
+        f"<div class='note-box' style='min-height:78px;'>"
+        f"<div class='kpi-micro'>Liquidity / Confidence</div>"
+        f"<div style=\"{_VAL_STYLE}\">{ticket.liquidity_score:.0%}"
+        f"<span style=\"color:{TEXT_MUTED};margin:0 8px;font-weight:400;\">/</span>"
+        f"{ticket.confidence_score:.0%}</div>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f"<div class='note-box' style='margin-top:10px;'>"
+        f"<div class='kpi-micro'>Disable Conditions</div>"
+        f"<span style='color:{TEXT_SEC};font-size:0.74rem;line-height:1.55;'>"
+        f"{ticket.disable_conditions}</span>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def _fmt0(v):
@@ -67,10 +184,12 @@ def render_falconx_sim_tab():
     if refresh:
         st.cache_data.clear()
 
-    # TTL bust: integer bucket changes every _CACHE_TTL_SECONDS so Streamlit
-    # re-runs the ingestion automatically on the next interaction after expiry.
+    # TTL bust: integer bucket changes every _CACHE_TTL_SECONDS. The
+    # cached wrapper memoizes the 14s venue API pipeline against this int
+    # so reruns within the same bucket are instant; the next bucket flip
+    # triggers a fresh fetch.
     ttl_bust = int(time.time() // _CACHE_TTL_SECONDS)
-    front_df, dislocations, status = load_front_end_market_snapshot(cfg, _ttl_bust=ttl_bust)
+    front_df, dislocations, status = _cached_snapshot(ttl_bust)
 
     # ── Feed status badge ─────────────────────────────────────────────────
     feed_parts = status.split(" | ")
@@ -299,6 +418,31 @@ def render_falconx_sim_tab():
     tfig.update_layout(height=content_h)
     with st.container(height=viewport_h, border=False, key="scroll_sim_snap"):
         st.plotly_chart(tfig, use_container_width=True, config=PLOTLY_CONFIG, theme=None, key="sim_snap_tbl")
+
+    # ── Illustrative ScaleTrader ticket generator ────────────────────────
+    st.markdown("<div class='shdr oriel-section-gap'>Illustrative ScaleTrader Ticket — Not Routed</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='font-size:0.69rem;color:{TEXT_MUTED};margin:-2px 0 8px;'>"
+        "Demo-only translation layer: uses the selected dislocation row to generate ScaleTrader-style ladder parameters. "
+        "No IBKR authentication, TWS routing, or live order submission is wired in.</div>",
+        unsafe_allow_html=True,
+    )
+
+    ticket_source = dislocations.copy()
+    if not ticket_source.empty:
+        ticket_source["contract_label"] = (
+            ticket_source["venue"].astype(str) + " · " +
+            ticket_source["release_month"].astype(str) + " · " +
+            ticket_source["market_id"].astype(str)
+        )
+        preferred = ticket_source[ticket_source["venue"].eq("ForecastEx")]
+        if preferred.empty:
+            preferred = ticket_source[ticket_source["venue"].eq("Kalshi")]
+        default_label = preferred.iloc[0]["contract_label"] if not preferred.empty else ticket_source.iloc[0]["contract_label"]
+
+        _render_scaletrader_card(ticket_source, default_label)
+    else:
+        st.info("No dislocation rows available to generate an illustrative ScaleTrader ticket.")
 
     # ── Heatmap (Blues colorscale matching Chris's original) ─────────────
     st.markdown("<div class='shdr oriel-section-gap'>Spread vs PnL \u00b7 Parameter Sweep</div>", unsafe_allow_html=True)

@@ -39,3 +39,29 @@ def test_falconx_harness_runs_with_live_or_fallback_data():
     sweep = run_parameter_sweep(dis)
     assert not sweep.empty
     assert {'spread_bps', 'launch_notional_usd', 'total_pnl_usd'}.issubset(set(sweep.columns))
+
+
+def test_scaletrader_ticket_generator_uses_dislocation_direction():
+    from oriel_hl_sim.scaletrader import generate_scaletrader_ticket
+
+    _, dis, _ = load_front_end_market_snapshot()
+    row = dis.iloc[0].copy()
+    row["dislocation_bps"] = -125.0
+    ticket = generate_scaletrader_ticket(row, max_position=2_000, target_ladder_depth=8)
+    assert ticket.side == "Buy YES"
+    assert ticket.levels == 8
+    assert ticket.clip_size == 250
+    assert ticket.max_exposure == 2_000
+    assert 0.01 <= ticket.start_price <= 0.99
+    assert "Disable if Oriel edge" in ticket.disable_conditions
+
+
+def test_scaletrader_ticket_generator_handles_sell_yes():
+    from oriel_hl_sim.scaletrader import generate_scaletrader_ticket
+
+    _, dis, _ = load_front_end_market_snapshot()
+    row = dis.iloc[0].copy()
+    row["dislocation_bps"] = 125.0
+    ticket = generate_scaletrader_ticket(row, max_position=2_000, target_ladder_depth=8)
+    assert ticket.side == "Sell YES"
+    assert ticket.profit_taker_offset < 0

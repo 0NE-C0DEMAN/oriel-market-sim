@@ -29,6 +29,7 @@ streamlit run app.py
 - **Front-end dislocation analytics**: venue-implied YoY vs Oriel reference, high-contrast scatter (gold / cyan / green) with liquidity-weighted marker sizes, 11px floor so low-liquidity venues stay visually legible
 - **Market-making backtest**: 8-cell KPI strip (PnL, Fills, Fill Rate, Avg Dislocation bp, Net Edge After Costs bp, Max Inventory, Market Stability, Liquidity Sustainability) with ribbon showing `Quoted XX bp → Effective YY bp` so the liquidity tightening/widening is visible at every launch size
 - **Parameter sweep heatmap**: quoted spread vs launch notional vs backtest PnL
+- **Illustrative ScaleTrader Ticket — Not Routed**: demo-only translation layer below the Execution Snapshot. Selects any dislocation row (default ForecastEx, falls back to Kalshi) and produces an 8-cell ticket card with Side (Buy YES on negative dislocation / Sell YES on positive), Start Price, Increment, Levels, Clip Size, Max Exposure, Profit-Taker, Oriel Edge (pp), plus Oriel fair value, contract market price, liquidity / confidence, and disable conditions. Pure parameter generation — no IBKR/TWS authentication, routing, or order submission is wired in.
 - **Oriel design language**: full CSS injection, KPI strips, desk tables, gold-themed charts, `automargin` axis titles for clean separation from curves and container walls
 
 ## Normalization methodology (current FalconX branch)
@@ -49,6 +50,7 @@ oriel_hl_sim/
   common.py                     Dataclasses (VenueQuote, DislocationRow, etc.)
   config/markets.py             HarnessConfig (env-driven, frozen dataclass) incl. core_curve_csv, reference_mode, slippage_buffer_bps, fee_buffer_bps
   core_curve_adapter.py         Loads the core Oriel curve export (data/oriel_curve_current.csv)
+  scaletrader.py                Pure ticket-generation logic for the illustrative ScaleTrader card (no routing)
   ingestion.py                  Kalshi + Polymarket + ForecastEx ingest, normalization, core-vs-local reference, LOO diagnostics, audit builder
   simulation.py                 Backtest engine + parameter sweep, net executable edge after buffers
 venues/                         Venue adapters (shared with core Oriel app)
