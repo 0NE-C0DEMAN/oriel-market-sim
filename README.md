@@ -1,6 +1,6 @@
 # Oriel Market Simulation — CPI Curve & Perp Pilot
 
-Simulation + demo layer for the Hyperliquid CPI perp listing. Designed for the FalconX discussion — not a fork of the core Oriel app.
+Simulation + demo layer for the Hyperliquid CPI perp listing. Designed for a liquidity provider discussion — not a fork of the core Oriel app.
 
 **Live demo:** [oriel-market-sim.streamlit.app](https://oriel-market-sim.streamlit.app/)
 
