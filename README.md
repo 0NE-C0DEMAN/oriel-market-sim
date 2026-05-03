@@ -78,4 +78,4 @@ ui/                             Shared UI infrastructure (tokens, charts, tables
 
 ## Purpose
 
-Clean extension layer for discussing architecture, quoting model, venue normalization, and a $3MM launch package with FalconX before hard-wiring the oracle publisher and deployer stack.
+Clean extension layer for discussing architecture, quoting model, venue normalization, and a $3MM liquidity launch package before hard-wiring the oracle publisher and deployer stack.
